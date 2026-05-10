@@ -2,7 +2,8 @@
  * Prepare aionrs binary for Electron packaging.
  *
  * Resolution order:
- *  1. GitHub release download (requires AIONRS_VERSION or defaults to "latest")
+ *  1. Local cache / installed app binary
+ *  2. GitHub release download (requires AIONRS_VERSION or defaults to "latest")
  *
  * Output: resources/bundled-aionrs/{platform}-{arch}/aionrs[.exe]
  *
@@ -47,12 +48,97 @@ function writeJson(filePath, payload) {
   fs.writeFileSync(filePath, JSON.stringify(payload, null, 2) + '\n', 'utf-8');
 }
 
+function readJsonSafe(filePath) {
+  try {
+    if (!fs.existsSync(filePath)) return null;
+    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  } catch {
+    return null;
+  }
+}
+
 function getBinaryName(platform) {
   return platform === 'win32' ? 'aionrs.exe' : 'aionrs';
 }
 
 function getVersion() {
   return (process.env.AIONRS_VERSION || 'latest').trim();
+}
+
+function getCacheRootDir() {
+  const custom = process.env.WEPULSE_HERMES_AIONRS_CACHE_DIR || process.env.AIONRS_CACHE_DIR;
+  if (custom && custom.trim()) {
+    return path.resolve(custom.trim());
+  }
+
+  if (process.platform === 'win32') {
+    const localAppData = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local');
+    return path.join(localAppData, 'WePulse-Hermes', 'cache', 'bundled-aionrs');
+  }
+
+  if (process.platform === 'darwin') {
+    return path.join(os.homedir(), 'Library', 'Caches', 'WePulse-Hermes', 'bundled-aionrs');
+  }
+
+  const xdgCacheHome = process.env.XDG_CACHE_HOME || path.join(os.homedir(), '.cache');
+  return path.join(xdgCacheHome, 'WePulse-Hermes', 'bundled-aionrs');
+}
+
+function getCacheRuntimeDir(tag, runtimeKey) {
+  return path.join(getCacheRootDir(), tag, runtimeKey);
+}
+
+function getCacheMetaPath(cacheRuntimeDir) {
+  return path.join(cacheRuntimeDir, 'manifest.json');
+}
+
+function isUsableBinary(filePath) {
+  try {
+    return fs.existsSync(filePath) && fs.statSync(filePath).isFile() && fs.statSync(filePath).size > 0;
+  } catch {
+    return false;
+  }
+}
+
+function copyBinaryToDirectory(sourcePath, targetDir, binaryName) {
+  const targetPath = path.join(targetDir, binaryName);
+  copyFileSafe(sourcePath, targetPath);
+  ensureExecutableMode(targetPath);
+  return targetPath;
+}
+
+function resolveLocalBinary(projectRoot, platform, arch, runtimeKey, binaryName) {
+  const configured = process.env.WEPULSE_HERMES_AIONRS_PATH || process.env.AIONRS_PATH;
+  const candidates = [];
+
+  if (configured && configured.trim()) {
+    const configuredPath = path.resolve(configured.trim());
+    candidates.push(
+      fs.existsSync(configuredPath) && fs.statSync(configuredPath).isDirectory()
+        ? path.join(configuredPath, binaryName)
+        : configuredPath
+    );
+  }
+
+  candidates.push(path.join(projectRoot, 'resources', 'bundled-aionrs', runtimeKey, binaryName));
+
+  if (platform === process.platform && arch === process.arch) {
+    if (platform === 'darwin') {
+      candidates.push(
+        path.join(
+          '/Applications',
+          'WePulse-Hermes.app',
+          'Contents',
+          'Resources',
+          'bundled-aionrs',
+          runtimeKey,
+          binaryName
+        )
+      );
+    }
+  }
+
+  return candidates.find(isUsableBinary) || null;
 }
 
 // ---------------------------------------------------------------------------
@@ -208,25 +294,71 @@ function prepareAionrs() {
   const targetDir = path.join(projectRoot, 'resources', 'bundled-aionrs', runtimeKey);
   const binaryName = getBinaryName(platform);
   const targetBinaryPath = path.join(targetDir, binaryName);
+  const cacheRuntimeDir = getCacheRuntimeDir(tag, runtimeKey);
+  const cacheBinaryPath = path.join(cacheRuntimeDir, binaryName);
 
   console.log(`Preparing aionrs for ${runtimeKey} (version: ${tag})`);
-
-  removeDirectorySafe(targetDir);
-  ensureDirectory(targetDir);
 
   let sourcePath = null;
   let sourceType = 'none';
   let sourceDetail = {};
   let tempDir = null;
 
-  // 1. Download from GitHub releases
+  // 1. Reuse cache first. GitHub release downloads are frequently slow in CN networks.
+  if (!sourcePath && isUsableBinary(cacheBinaryPath)) {
+    const cacheMeta = readJsonSafe(getCacheMetaPath(cacheRuntimeDir));
+    sourcePath = cacheBinaryPath;
+    sourceType = 'cache';
+    sourceDetail = {
+      dir: cacheRuntimeDir,
+      origin: cacheMeta?.source || {},
+    };
+    console.log(`  Reusing cached aionrs binary`);
+  }
+
+  // 2. Reuse a local installed/dev bundle when building for the current platform.
+  if (!sourcePath) {
+    const localBinary = resolveLocalBinary(projectRoot, platform, arch, runtimeKey, binaryName);
+    if (localBinary) {
+      removeDirectorySafe(cacheRuntimeDir);
+      ensureDirectory(cacheRuntimeDir);
+      sourcePath = copyBinaryToDirectory(localBinary, cacheRuntimeDir, binaryName);
+      sourceType = 'local';
+      sourceDetail = { path: localBinary };
+      writeJson(getCacheMetaPath(cacheRuntimeDir), {
+        platform,
+        arch,
+        version: tag,
+        generatedAt: new Date().toISOString(),
+        sourceType,
+        source: sourceDetail,
+        files: [binaryName],
+        skipped: false,
+      });
+      console.log(`  Reusing local aionrs binary from ${localBinary}`);
+    }
+  }
+
+  // 3. Download from GitHub releases
   if (!sourcePath) {
     try {
       const result = downloadAndExtract(platform, arch, tag);
-      sourcePath = result.binaryPath;
+      removeDirectorySafe(cacheRuntimeDir);
+      ensureDirectory(cacheRuntimeDir);
+      sourcePath = copyBinaryToDirectory(result.binaryPath, cacheRuntimeDir, binaryName);
       tempDir = result.tempDir;
       sourceType = 'download';
       sourceDetail = { url: result.url };
+      writeJson(getCacheMetaPath(cacheRuntimeDir), {
+        platform,
+        arch,
+        version: tag,
+        generatedAt: new Date().toISOString(),
+        sourceType,
+        source: sourceDetail,
+        files: [binaryName],
+        skipped: false,
+      });
       console.log(`  Downloaded from GitHub releases`);
     } catch (error) {
       console.warn(`  Download failed: ${error.message}`);
@@ -235,6 +367,8 @@ function prepareAionrs() {
 
   // Write result
   if (sourcePath) {
+    removeDirectorySafe(targetDir);
+    ensureDirectory(targetDir);
     copyFileSafe(sourcePath, targetBinaryPath);
     ensureExecutableMode(targetBinaryPath);
 
@@ -265,6 +399,8 @@ function prepareAionrs() {
   }
 
   // Not found — write skip manifest (non-fatal, like bundled-bun)
+  removeDirectorySafe(targetDir);
+  ensureDirectory(targetDir);
   const manifest = {
     platform,
     arch,
