@@ -92,14 +92,39 @@ export interface AutoUpdateStatus {
 
 export type HermesAgentUpdateStatus = {
   installed: boolean;
+  installStatus?: 'not-installed' | 'installing' | 'installed' | 'failed';
+  installStage?: 'checking' | 'downloading' | 'python' | 'venv' | 'dependencies' | 'wrapper' | 'verifying' | 'complete';
+  installStep?: number;
+  installTotalSteps?: number;
+  installDetail?: string;
   updateAvailable: boolean | null;
   version?: string;
   path?: string;
+  runtimeRoot?: string;
+  hermesHome?: string;
   versionOutput?: string;
   checkOutput?: string;
   checkError?: string;
+  warning?: string;
 };
 
 export type HermesAgentUpdateResult = HermesAgentUpdateStatus & {
   updateOutput: string;
+};
+
+export type HermesAgentCommandResult = {
+  success: boolean;
+  output: string;
+  error?: string;
+};
+
+export type HermesAgentBackupResult = HermesAgentCommandResult & {
+  filePath?: string;
+};
+
+export type HermesAgentRuntimeConfig = {
+  forceIpv4: boolean;
+  proxy: string;
+  configPath: string;
+  exists: boolean;
 };

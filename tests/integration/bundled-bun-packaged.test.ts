@@ -22,11 +22,13 @@ function findLatestResourcesDirUnderOut(): string | null {
   if (!fs.existsSync(outDir)) return null;
 
   const allDirs = listDirsRecursive(outDir);
-  const candidates = allDirs.filter((dir) => path.basename(dir) === 'resources');
+  const candidates = allDirs.filter((dir) => path.basename(dir).toLowerCase() === 'resources');
   if (candidates.length === 0) return null;
 
-  candidates.sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
-  return candidates[0] || null;
+  const appResourceCandidates = candidates.filter((dir) => fs.existsSync(path.join(dir, 'bundled-bun')));
+  const sortedCandidates = appResourceCandidates.length > 0 ? appResourceCandidates : candidates;
+  sortedCandidates.sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
+  return sortedCandidates[0] || null;
 }
 
 function resolveResourcesDir(): string | null {
@@ -64,7 +66,7 @@ type BundledBunManifest = {
     arch: string;
     version: string;
     variant?: string;
-    sourceType: 'download';
+    sourceType: 'download' | 'local';
     source: Record<string, string>;
     updatedAt: string;
   };
@@ -109,7 +111,7 @@ describe('Packaged bundled bun resources integrity', () => {
 
       if (manifest.sourceType === 'cache') {
         if (manifest.cacheMeta) {
-          expect(manifest.cacheMeta.sourceType).toBe('download');
+          expect(['download', 'local']).toContain(manifest.cacheMeta.sourceType);
         } else {
           expect((manifest.source as { dir?: string }).dir).toBeTruthy();
         }

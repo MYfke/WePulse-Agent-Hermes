@@ -22,6 +22,11 @@ import type {
 } from '@/common/types/acpTypes';
 import { ACP_BACKENDS_ALL } from '@/common/types/acpTypes';
 import { ExtensionRegistry } from '@process/extensions';
+import {
+  installManagedHermesRuntime,
+  isManagedHermesRuntimeCurrent,
+  resolveManagedHermesBinary,
+} from '@process/agent/hermes';
 import { getDatabase } from '@process/services/database';
 import { ProcessConfig } from '@process/utils/initStorage';
 import { addMessage, addOrUpdateMessage, nextTickToLocalFinish } from '@process/utils/message';
@@ -528,8 +533,8 @@ ${collectedResponses.join('\n')}`;
     const config = await ProcessConfig.get('acp.config');
     const codexConfig = data.backend === 'codex' ? await ProcessConfig.get('codex.config') : undefined;
 
-    let cliPath = data.cliPath;
-    if (!cliPath && config?.[data.backend]?.cliPath) {
+    let cliPath = data.backend === 'hermes' ? await this.resolveManagedHermesCliPath() : data.cliPath;
+    if (data.backend !== 'hermes' && !cliPath && config?.[data.backend]?.cliPath) {
       cliPath = config[data.backend].cliPath;
     }
 
@@ -567,7 +572,7 @@ ${collectedResponses.join('\n')}`;
     }
 
     // If cliPath is not configured, fallback to default cliCommand from ACP_BACKENDS_ALL
-    if (!cliPath && backendConfig?.cliCommand) {
+    if (data.backend !== 'hermes' && !cliPath && backendConfig?.cliCommand) {
       cliPath = backendConfig.cliCommand;
     }
 
@@ -581,6 +586,20 @@ ${collectedResponses.join('\n')}`;
     }
 
     return { cliPath, customArgs, yoloMode };
+  }
+
+  private async resolveManagedHermesCliPath(): Promise<string | undefined> {
+    const existingBinary = resolveManagedHermesBinary();
+    if (existingBinary && isManagedHermesRuntimeCurrent()) return existingBinary;
+
+    try {
+      await installManagedHermesRuntime();
+    } catch (error) {
+      mainError('[AcpAgentManager]', 'Failed to install managed Hermes Agent before launch', error);
+      throw error;
+    }
+
+    return resolveManagedHermesBinary() ?? undefined;
   }
 
   // ── initAgent callback handlers ──────────────────────────────────────

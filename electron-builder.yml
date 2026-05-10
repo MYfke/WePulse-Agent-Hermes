@@ -109,6 +109,8 @@ extraResources:
     to: app.png
   - from: resources/bundled-bun
     to: bundled-bun
+  - from: resources/bundled-python
+    to: bundled-python
   # aionrs binary (pre-compiled per platform/arch)
   - from: resources/bundled-aionrs
     to: bundled-aionrs

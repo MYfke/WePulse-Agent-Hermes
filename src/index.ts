@@ -41,6 +41,7 @@ import {
   handleDeepLinkUrl,
   PROTOCOL_SCHEME,
 } from './process/utils/deepLink';
+import { startManagedHermesRuntimeInstall } from './process/agent/hermes';
 import {
   bindMainWindowReferences,
   showAndFocusMainWindow,
@@ -203,6 +204,26 @@ let appReadyDone = false;
 
 let mainWindow: BrowserWindow;
 
+const isCiRuntime = process.env.CI === 'true' || process.env.CI === '1' || process.env.GITHUB_ACTIONS === 'true';
+
+const startHermesRuntimeBootstrap = (mark: (label: string) => void): void => {
+  if (
+    isE2ETestMode ||
+    isCiRuntime ||
+    process.env.WEPULSE_HERMES_DISABLE_MANAGED_INSTALL === '1' ||
+    process.env.AIONUI_E2E_TEST === '1'
+  ) {
+    return;
+  }
+
+  startManagedHermesRuntimeInstall(() => {
+    mark('installManagedHermesRuntime');
+    void import('@process/agent/AgentRegistry')
+      .then(({ agentRegistry }) => agentRegistry.refreshBuiltinAgents())
+      .catch((error) => console.error('[Hermes] Failed to refresh agents after managed install:', error));
+  });
+};
+
 const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): void => {
   console.log('[AionUi] Creating main window...');
   // Get primary display size
@@ -293,7 +314,6 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
 
   // Initialize auto-updater service (skip when disabled via env, e.g. E2E / CI)
   // 初始化自动更新服务（通过环境变量禁用时跳过，例如 E2E / CI 场景）
-  const isCiRuntime = process.env.CI === 'true' || process.env.CI === '1' || process.env.GITHUB_ACTIONS === 'true';
   const disableAutoUpdater =
     process.env.AIONUI_DISABLE_AUTO_UPDATE === '1' || process.env.AIONUI_E2E_TEST === '1' || isCiRuntime;
   if (!disableAutoUpdater) {
@@ -531,6 +551,7 @@ const handleAppReady = async (): Promise<void> => {
     createWindow({ showOnReady: showMainWindowOnReady });
     appReadyDone = true;
     mark('createWindow');
+    startHermesRuntimeBootstrap(mark);
 
     // Initialize desktop pet (delayed to not block main window)
     setTimeout(() => {

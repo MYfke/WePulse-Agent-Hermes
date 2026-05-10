@@ -15,6 +15,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const prepareBundledBun = require('./prepareBundledBun');
+const prepareBundledPython = require('./prepareBundledPython');
 const prepareAionrs = require('./prepareAionrs');
 
 // DMG retry logic for macOS: detects DMG creation failures by checking artifacts
@@ -450,9 +451,12 @@ try {
     return;
   }
 
-  // 5. Prepare bundled bun/bunx binaries (for packaged runtime usage)
-  // This only affects packaging assets; runtime integration will be added in a future PR.
+  // 5. Prepare bundled runtimes for packaged usage.
   prepareBundledBun();
+  const runtimeArchs = multiArch ? archArgs : [targetArch];
+  for (const runtimeArch of runtimeArchs) {
+    prepareBundledPython(runtimeArch);
+  }
 
   // 5b. Prepare hub resources (index.json + extension zips for offline fallback)
   execSync('node scripts/prepareHubResources.js', { stdio: 'inherit', env: process.env });

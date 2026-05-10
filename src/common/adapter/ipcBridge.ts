@@ -12,6 +12,27 @@ import type { AgentBackend, AcpModelInfo } from '../types/acpTypes';
 import type { SlashCommandItem } from '../chat/slash/types';
 import type { IMcpServer, IProvider, TChatConversation, TProviderWithModel, ICssTheme } from '../config/storage';
 import type { WePulseConfigUpdateRequest, WePulseLoginRequest, WePulseStatus } from '../config/wepulse';
+import type {
+  HermesAddMemoryEntryRequest,
+  HermesCreateProfileRequest,
+  HermesDeleteProfileRequest,
+  HermesInstallBundledSkillRequest,
+  HermesReadLogRequest,
+  HermesRemoveMemoryEntryRequest,
+  HermesSaveMemoryRequest,
+  HermesSavePersonaRequest,
+  HermesSetActiveProfileRequest,
+  HermesSetCredentialPoolRequest,
+  HermesSetEnvRequest,
+  HermesSetGatewayPlatformRequest,
+  HermesSetMemoryProviderRequest,
+  HermesSetModelConfigRequest,
+  HermesSetSkillEnabledRequest,
+  HermesSetToolsetEnabledRequest,
+  HermesUninstallSkillRequest,
+  HermesUpdateMemoryEntryRequest,
+  HermesWorkspaceSnapshot,
+} from '../types/hermesWorkspace';
 import type { PreviewHistoryTarget, PreviewSnapshotInfo } from '../types/preview';
 import type {
   UpdateCheckRequest,
@@ -20,6 +41,9 @@ import type {
   UpdateDownloadRequest,
   UpdateDownloadResult,
   AutoUpdateStatus,
+  HermesAgentBackupResult,
+  HermesAgentCommandResult,
+  HermesAgentRuntimeConfig,
   HermesAgentUpdateResult,
   HermesAgentUpdateStatus,
 } from '../update/updateTypes';
@@ -210,6 +234,78 @@ export const autoUpdate = {
 export const hermesAgent = {
   checkUpdate: bridge.buildProvider<IBridgeResponse<HermesAgentUpdateStatus>, void>('hermes-agent.check-update'),
   update: bridge.buildProvider<IBridgeResponse<HermesAgentUpdateResult>, void>('hermes-agent.update'),
+  doctor: bridge.buildProvider<IBridgeResponse<HermesAgentCommandResult>, void>('hermes-agent.doctor'),
+  dump: bridge.buildProvider<IBridgeResponse<HermesAgentCommandResult>, void>('hermes-agent.dump'),
+  backup: bridge.buildProvider<IBridgeResponse<HermesAgentBackupResult>, void>('hermes-agent.backup'),
+  importBackup: bridge.buildProvider<IBridgeResponse<HermesAgentCommandResult>, { archivePath: string }>(
+    'hermes-agent.import-backup'
+  ),
+  getConfig: bridge.buildProvider<IBridgeResponse<HermesAgentRuntimeConfig>, void>('hermes-agent.get-config'),
+  updateConfig: bridge.buildProvider<
+    IBridgeResponse<HermesAgentRuntimeConfig>,
+    Pick<HermesAgentRuntimeConfig, 'forceIpv4' | 'proxy'>
+  >('hermes-agent.update-config'),
+};
+
+export const hermesWorkspace = {
+  getSnapshot: bridge.buildProvider<IBridgeResponse<HermesWorkspaceSnapshot>, void>('hermes-workspace.get-snapshot'),
+  createProfile: bridge.buildProvider<IBridgeResponse<HermesWorkspaceSnapshot>, HermesCreateProfileRequest>(
+    'hermes-workspace.create-profile'
+  ),
+  deleteProfile: bridge.buildProvider<IBridgeResponse<HermesWorkspaceSnapshot>, HermesDeleteProfileRequest>(
+    'hermes-workspace.delete-profile'
+  ),
+  setActiveProfile: bridge.buildProvider<IBridgeResponse<HermesWorkspaceSnapshot>, HermesSetActiveProfileRequest>(
+    'hermes-workspace.set-active-profile'
+  ),
+  savePersona: bridge.buildProvider<IBridgeResponse<HermesWorkspaceSnapshot>, HermesSavePersonaRequest>(
+    'hermes-workspace.save-persona'
+  ),
+  resetPersona: bridge.buildProvider<IBridgeResponse<HermesWorkspaceSnapshot>, void>('hermes-workspace.reset-persona'),
+  saveMemory: bridge.buildProvider<IBridgeResponse<HermesWorkspaceSnapshot>, HermesSaveMemoryRequest>(
+    'hermes-workspace.save-memory'
+  ),
+  addMemoryEntry: bridge.buildProvider<IBridgeResponse<HermesWorkspaceSnapshot>, HermesAddMemoryEntryRequest>(
+    'hermes-workspace.add-memory-entry'
+  ),
+  updateMemoryEntry: bridge.buildProvider<IBridgeResponse<HermesWorkspaceSnapshot>, HermesUpdateMemoryEntryRequest>(
+    'hermes-workspace.update-memory-entry'
+  ),
+  removeMemoryEntry: bridge.buildProvider<IBridgeResponse<HermesWorkspaceSnapshot>, HermesRemoveMemoryEntryRequest>(
+    'hermes-workspace.remove-memory-entry'
+  ),
+  setMemoryProvider: bridge.buildProvider<IBridgeResponse<HermesWorkspaceSnapshot>, HermesSetMemoryProviderRequest>(
+    'hermes-workspace.set-memory-provider'
+  ),
+  setSkillEnabled: bridge.buildProvider<IBridgeResponse<HermesWorkspaceSnapshot>, HermesSetSkillEnabledRequest>(
+    'hermes-workspace.set-skill-enabled'
+  ),
+  installBundledSkill: bridge.buildProvider<IBridgeResponse<HermesWorkspaceSnapshot>, HermesInstallBundledSkillRequest>(
+    'hermes-workspace.install-bundled-skill'
+  ),
+  uninstallSkill: bridge.buildProvider<IBridgeResponse<HermesWorkspaceSnapshot>, HermesUninstallSkillRequest>(
+    'hermes-workspace.uninstall-skill'
+  ),
+  setToolsetEnabled: bridge.buildProvider<IBridgeResponse<HermesWorkspaceSnapshot>, HermesSetToolsetEnabledRequest>(
+    'hermes-workspace.set-toolset-enabled'
+  ),
+  setEnv: bridge.buildProvider<IBridgeResponse<HermesWorkspaceSnapshot>, HermesSetEnvRequest>(
+    'hermes-workspace.set-env'
+  ),
+  setModelConfig: bridge.buildProvider<IBridgeResponse<HermesWorkspaceSnapshot>, HermesSetModelConfigRequest>(
+    'hermes-workspace.set-model-config'
+  ),
+  setCredentialPool: bridge.buildProvider<IBridgeResponse<HermesWorkspaceSnapshot>, HermesSetCredentialPoolRequest>(
+    'hermes-workspace.set-credential-pool'
+  ),
+  startGateway: bridge.buildProvider<IBridgeResponse<HermesWorkspaceSnapshot>, void>('hermes-workspace.start-gateway'),
+  stopGateway: bridge.buildProvider<IBridgeResponse<HermesWorkspaceSnapshot>, void>('hermes-workspace.stop-gateway'),
+  setGatewayPlatform: bridge.buildProvider<IBridgeResponse<HermesWorkspaceSnapshot>, HermesSetGatewayPlatformRequest>(
+    'hermes-workspace.set-gateway-platform'
+  ),
+  readLog: bridge.buildProvider<IBridgeResponse<HermesWorkspaceSnapshot>, HermesReadLogRequest>(
+    'hermes-workspace.read-log'
+  ),
 };
 
 export const starOffice = {

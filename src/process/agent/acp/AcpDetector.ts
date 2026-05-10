@@ -8,6 +8,7 @@ import type { AcpBackendConfig } from '@/common/types/acpTypes';
 import { POTENTIAL_ACP_CLIS } from '@/common/types/acpTypes';
 import type { AcpDetectedAgent } from '@/common/types/detectedAgent';
 import { ExtensionRegistry } from '@process/extensions';
+import { isManagedHermesRuntimeCurrent, resolveManagedHermesBinary } from '@process/agent/hermes';
 import { safeExec, safeExecFile } from '@process/utils/safeExec';
 import { ProcessConfig } from '@process/utils/initStorage';
 import { getEnhancedEnv } from '@process/utils/shellEnv';
@@ -38,6 +39,9 @@ class AcpDetector {
 
   /** Check if a single CLI command is available on the system PATH (sync). */
   isCliAvailable(cliCommand: string): boolean {
+    if (cliCommand === 'hermes') {
+      return isManagedHermesRuntimeCurrent();
+    }
     return this.batchCheckCliAvailabilitySync([cliCommand]).has(cliCommand);
   }
 
@@ -151,7 +155,8 @@ class AcpDetector {
    * Detect built-in ACP CLI agents via async batch CLI availability check.
    */
   async detectBuiltinAgents(): Promise<AcpDetectedAgent[]> {
-    const allCmds = POTENTIAL_ACP_CLIS.map((cli) => cli.cmd);
+    const regularClis = POTENTIAL_ACP_CLIS.filter((cli) => cli.backendId !== 'hermes');
+    const allCmds = regularClis.map((cli) => cli.cmd);
     const available = await this.batchCheckCliAvailability(allCmds);
     const missing = allCmds.filter((cmd) => !available.has(cmd));
 
@@ -163,15 +168,33 @@ class AcpDetector {
       );
     }
 
-    return POTENTIAL_ACP_CLIS.filter((cli) => available.has(cli.cmd)).map((cli) => ({
-      id: cli.backendId,
-      name: cli.name,
-      kind: 'acp' as const,
-      available: true,
-      backend: cli.backendId,
-      cliPath: cli.cmd,
-      acpArgs: cli.args,
-    }));
+    const detected = regularClis
+      .filter((cli) => available.has(cli.cmd))
+      .map((cli) => ({
+        id: cli.backendId,
+        name: cli.name,
+        kind: 'acp' as const,
+        available: true,
+        backend: cli.backendId,
+        cliPath: cli.cmd,
+        acpArgs: cli.args,
+      }));
+
+    const hermesBinary = resolveManagedHermesBinary();
+    const hermesCli = POTENTIAL_ACP_CLIS.find((cli) => cli.backendId === 'hermes');
+    if (hermesBinary && hermesCli) {
+      detected.push({
+        id: hermesCli.backendId,
+        name: hermesCli.name,
+        kind: 'acp' as const,
+        available: true,
+        backend: hermesCli.backendId,
+        cliPath: hermesBinary,
+        acpArgs: hermesCli.args,
+      });
+    }
+
+    return detected;
   }
 
   /**

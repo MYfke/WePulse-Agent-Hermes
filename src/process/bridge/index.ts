@@ -23,6 +23,7 @@ import { initFileWatchBridge } from './fileWatchBridge';
 import { initFsBridge } from './fsBridge';
 import { initGeminiBridge } from './geminiBridge';
 import { initGeminiConversationBridge } from './geminiConversationBridge';
+import { initHermesWorkspaceBridge } from './hermesWorkspaceBridge';
 import { initMcpBridge } from './mcpBridge';
 import { initModelBridge } from './modelBridge';
 import { initPreviewHistoryBridge } from './previewHistoryBridge';
@@ -77,6 +78,7 @@ export function initAllBridges(deps: BridgeDependencies): void {
   initOfficeWatchBridge();
   initWindowControlsBridge();
   initUpdateBridge();
+  initHermesWorkspaceBridge();
   initWebuiBridge();
   initChannelBridge(deps.channelRepo);
   initDatabaseBridge(deps.conversationRepo);
@@ -122,6 +124,7 @@ export {
   initFsBridge,
   initGeminiBridge,
   initGeminiConversationBridge,
+  initHermesWorkspaceBridge,
   initMcpBridge,
   initModelBridge,
   initNotificationBridge,

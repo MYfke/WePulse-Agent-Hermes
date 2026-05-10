@@ -531,7 +531,9 @@ export async function spawnGenericBackend(
   if (customEnv) {
     Object.assign(cleanEnv, customEnv);
   }
-  ensureMinNodeVersion(cleanEnv, 18, 17, `${backend} ACP`);
+  if (backend !== 'hermes') {
+    ensureMinNodeVersion(cleanEnv, 18, 17, `${backend} ACP`);
+  }
 
   const spawnStart = Date.now();
   const detached = process.platform !== 'win32';

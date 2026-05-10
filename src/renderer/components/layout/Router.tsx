@@ -11,6 +11,7 @@ const CapabilitiesSettings = React.lazy(() => import('@renderer/pages/settings/C
 const DisplaySettings = React.lazy(() => import('@renderer/pages/settings/DisplaySettings'));
 const AionrsSettings = React.lazy(() => import('@renderer/pages/settings/AionrsSettings'));
 const GeminiSettings = React.lazy(() => import('@renderer/pages/settings/GeminiSettings'));
+const HermesSettings = React.lazy(() => import('@renderer/pages/settings/HermesSettings'));
 const WePulseSettings = React.lazy(() => import('@renderer/pages/settings/WePulseSettings'));
 const ModeSettings = React.lazy(() => import('@renderer/pages/settings/ModeSettings'));
 const SystemSettings = React.lazy(() => import('@renderer/pages/settings/SystemSettings'));
@@ -63,6 +64,15 @@ const PanelRoute: React.FC<{ layout: React.ReactElement }> = ({ layout }) => {
             element={TEAM_MODE_ENABLED ? withRouteFallback(TeamIndex) : <Navigate to='/guid' replace />}
           />
           <Route path='/settings/gemini' element={withRouteFallback(GeminiSettings)} />
+          <Route path='/settings/hermes' element={<Navigate to='/settings/hermes-profiles' replace />} />
+          <Route path='/settings/hermes-profiles' element={withRouteFallback(HermesSettings)} />
+          <Route path='/settings/hermes-providers' element={withRouteFallback(HermesSettings)} />
+          <Route path='/settings/hermes-persona' element={withRouteFallback(HermesSettings)} />
+          <Route path='/settings/hermes-memory' element={withRouteFallback(HermesSettings)} />
+          <Route path='/settings/hermes-skills' element={withRouteFallback(HermesSettings)} />
+          <Route path='/settings/hermes-tools' element={withRouteFallback(HermesSettings)} />
+          <Route path='/settings/hermes-gateway' element={withRouteFallback(HermesSettings)} />
+          <Route path='/settings/hermes-logs' element={withRouteFallback(HermesSettings)} />
           <Route path='/settings/wepulse' element={withRouteFallback(WePulseSettings)} />
           <Route path='/settings/model' element={withRouteFallback(ModeSettings)} />
           <Route path='/settings/assistants' element={withRouteFallback(AssistantSettings)} />

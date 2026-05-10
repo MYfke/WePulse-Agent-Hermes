@@ -20,7 +20,16 @@ import * as fs from 'fs';
 import * as path from 'path';
 import semver from 'semver';
 import { autoUpdaterService } from '../services/autoUpdaterService';
-import { checkHermesAgentUpdate, updateHermesAgent } from '../services/hermesAgentUpdateService';
+import {
+  backupHermesAgentData,
+  checkHermesAgentUpdate,
+  getHermesAgentRuntimeConfig,
+  importHermesAgentData,
+  runHermesAgentDoctor,
+  runHermesAgentDump,
+  updateHermesAgent,
+  updateHermesAgentRuntimeConfig,
+} from '../services/hermesAgentUpdateService';
 
 /** Lazily loads i18n to avoid pulling in initStorage chain at module load time */
 let _i18nCache: Promise<typeof import('../services/i18n')> | null = null;
@@ -667,6 +676,54 @@ export function initUpdateBridge(): void {
       const { agentRegistry } = await import('@process/agent/AgentRegistry');
       await agentRegistry.refreshBuiltinAgents();
       return { success: true, data: result };
+    } catch (err: unknown) {
+      return { success: false, msg: err instanceof Error ? err.message : String(err) };
+    }
+  });
+
+  ipcBridge.hermesAgent.doctor.provider(async () => {
+    try {
+      return { success: true, data: await runHermesAgentDoctor() };
+    } catch (err: unknown) {
+      return { success: false, msg: err instanceof Error ? err.message : String(err) };
+    }
+  });
+
+  ipcBridge.hermesAgent.dump.provider(async () => {
+    try {
+      return { success: true, data: await runHermesAgentDump() };
+    } catch (err: unknown) {
+      return { success: false, msg: err instanceof Error ? err.message : String(err) };
+    }
+  });
+
+  ipcBridge.hermesAgent.backup.provider(async () => {
+    try {
+      return { success: true, data: await backupHermesAgentData() };
+    } catch (err: unknown) {
+      return { success: false, msg: err instanceof Error ? err.message : String(err) };
+    }
+  });
+
+  ipcBridge.hermesAgent.importBackup.provider(async ({ archivePath }) => {
+    try {
+      return { success: true, data: await importHermesAgentData(archivePath) };
+    } catch (err: unknown) {
+      return { success: false, msg: err instanceof Error ? err.message : String(err) };
+    }
+  });
+
+  ipcBridge.hermesAgent.getConfig.provider(async () => {
+    try {
+      return { success: true, data: await getHermesAgentRuntimeConfig() };
+    } catch (err: unknown) {
+      return { success: false, msg: err instanceof Error ? err.message : String(err) };
+    }
+  });
+
+  ipcBridge.hermesAgent.updateConfig.provider(async (input) => {
+    try {
+      return { success: true, data: await updateHermesAgentRuntimeConfig(input) };
     } catch (err: unknown) {
       return { success: false, msg: err instanceof Error ? err.message : String(err) };
     }
