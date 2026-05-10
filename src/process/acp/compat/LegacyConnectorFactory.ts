@@ -58,7 +58,14 @@ async function spawnLegacyChild(config: AgentConfig): Promise<ChildProcess> {
     return spawnViaNpxHooks(npxConnect, cwd);
   }
   if (config.command) {
-    const result = await spawnGenericBackend(backend, config.command, cwd, config.args, config.env);
+    const env = { ...config.env, ...config.authCredentials };
+    const result = await spawnGenericBackend(
+      backend,
+      config.command,
+      cwd,
+      config.args,
+      Object.keys(env).length > 0 ? env : undefined
+    );
     return result.child;
   }
   throw new AcpError('CONNECTION_FAILED', `No CLI path for backend "${backend}"`, { retryable: false });

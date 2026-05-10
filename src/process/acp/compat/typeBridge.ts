@@ -11,6 +11,9 @@ import {
 } from '@/common/types/acpTypes';
 import type { McpServer } from '@agentclientprotocol/sdk';
 import type { AgentConfig, AgentSource, ConfigOption, InitialDesiredConfig, ModelSnapshot } from '@process/acp/types';
+import { buildWePulseGatewayBaseUrl, type WePulseConfig } from '@/common/config/wepulse';
+import { ensureWePulseProviderSession } from '@process/services/wepulseAuthService';
+import { ProcessConfig } from '@process/utils/initStorage';
 import { getEnhancedEnv, loadFullShellEnvironment } from '@process/utils/shellEnv';
 /**
  * Old ACP agent config type from AcpAgent/AcpAgentManager
@@ -251,7 +254,27 @@ const BACKEND_AUTH_KEYS: Record<string, string[]> = {
   codebuddy: ['CODEBUDDY_API_KEY'],
   qwen: ['DASHSCOPE_API_KEY'],
   gemini: ['GOOGLE_API_KEY', 'GEMINI_API_KEY'],
+  hermes: ['OPENAI_API_KEY', 'OPENROUTER_API_KEY', 'OPENAI_BASE_URL', 'CUSTOM_BASE_URL', 'HERMES_INFERENCE_PROVIDER'],
 };
+
+async function loadWePulseHermesCredentials(): Promise<Record<string, string> | undefined> {
+  try {
+    await ensureWePulseProviderSession();
+    const config = await ProcessConfig.get('wepulse.config').catch((): WePulseConfig | undefined => undefined);
+    if (!config?.accessToken) return undefined;
+
+    const gatewayBaseUrl = buildWePulseGatewayBaseUrl(config.sub2apiBaseUrl);
+    return {
+      HERMES_INFERENCE_PROVIDER: 'custom',
+      OPENAI_API_KEY: config.accessToken,
+      OPENAI_BASE_URL: gatewayBaseUrl,
+      CUSTOM_BASE_URL: gatewayBaseUrl,
+    };
+  } catch (error) {
+    console.warn('[ACP hermes] Failed to load WePulse auth credentials:', error);
+    return undefined;
+  }
+}
 
 /**
  * Async: load the full user shell environment (survives Gemini's
@@ -279,6 +302,13 @@ export async function loadAuthCredentials(
     for (const key of keys) {
       const val = merged[key];
       if (val) creds[key] = val;
+    }
+  }
+
+  if (backend === 'hermes') {
+    const wePulseCredentials = await loadWePulseHermesCredentials();
+    if (wePulseCredentials) {
+      Object.assign(creds, wePulseCredentials);
     }
   }
 

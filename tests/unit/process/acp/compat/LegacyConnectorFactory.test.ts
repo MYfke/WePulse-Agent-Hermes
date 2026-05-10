@@ -19,12 +19,12 @@ vi.mock('@process/agent/acp/acpConnectors', () => ({
 // We only test that the factory wires the correct spawnFn.
 const mockProcessAcpClientInstances: Array<{ spawnFn: () => Promise<unknown>; options: unknown }> = [];
 
+function MockProcessAcpClient(this: unknown, spawnFn: () => Promise<unknown>, options: unknown) {
+  mockProcessAcpClientInstances.push({ spawnFn, options });
+}
+
 vi.mock('@process/acp/infra/ProcessAcpClient', () => ({
-  ProcessAcpClient: class MockProcessAcpClient {
-    constructor(spawnFn: () => Promise<unknown>, options: unknown) {
-      mockProcessAcpClientInstances.push({ spawnFn, options });
-    }
-  },
+  ProcessAcpClient: MockProcessAcpClient,
 }));
 
 import { LegacyConnectorFactory } from '@process/acp/compat/LegacyConnectorFactory';
@@ -149,7 +149,8 @@ describe('LegacyConnectorFactory', () => {
           agentSource: 'custom',
           command: '/usr/local/bin/goose',
           args: ['acp'],
-          env: { GOOSE_KEY: 'xxx' },
+          env: { GOOSE_KEY: 'xxx', OPENAI_API_KEY: 'stale' },
+          authCredentials: { OPENAI_API_KEY: 'fresh' },
         }),
         makeHandlers()
       );
@@ -158,6 +159,7 @@ describe('LegacyConnectorFactory', () => {
       const result = await spawnFn();
       expect(mocks.spawnGenericBackend).toHaveBeenCalledWith('goose', '/usr/local/bin/goose', '/tmp/test', ['acp'], {
         GOOSE_KEY: 'xxx',
+        OPENAI_API_KEY: 'fresh',
       });
       expect(result).toBe(child);
     });
