@@ -11,7 +11,8 @@ import { GeminiRotatingClient, type GeminiClientConfig } from './GeminiRotatingC
 import { AnthropicRotatingClient, type AnthropicClientConfig } from './AnthropicRotatingClient';
 import type { RotatingApiClientOptions } from './RotatingApiClient';
 import { getProviderAuthType } from '../utils/platformAuthType';
-import { isNewApiPlatform } from '../utils/platformConstants';
+import { isNewApiPlatform, isWePulseSub2apiPlatform } from '../utils/platformConstants';
+import { WEPULSE_HERMES_CLIENT_TITLE } from '../config/wepulse';
 
 export interface ClientOptions {
   timeout?: number;
@@ -69,17 +70,19 @@ export class ClientFactory {
 
     // 对 new-api 网关进行 URL 规范化 / Normalize URL for new-api gateway
     const isNewApi = isNewApiPlatform(provider.platform);
+    const isWePulseSub2api = isWePulseSub2apiPlatform(provider.platform);
     const baseUrl = isNewApi ? normalizeNewApiBaseUrl(provider.baseUrl, authType) : provider.baseUrl;
+    const defaultOpenAIHeaders = {
+      'HTTP-Referer': isWePulseSub2api ? 'https://wepulse.cn' : 'https://aionui.com',
+      'X-Title': isWePulseSub2api ? WEPULSE_HERMES_CLIENT_TITLE : 'AionUi',
+    };
 
     switch (authType) {
       case AuthType.USE_OPENAI: {
         const clientConfig: OpenAIClientConfig = {
           baseURL: baseUrl,
           timeout: options.timeout,
-          defaultHeaders: {
-            'HTTP-Referer': 'https://aionui.com',
-            'X-Title': 'AionUi',
-          },
+          defaultHeaders: defaultOpenAIHeaders,
           ...(options.baseConfig as OpenAIClientConfig),
         };
 
@@ -128,10 +131,7 @@ export class ClientFactory {
         const clientConfig: OpenAIClientConfig = {
           baseURL: baseUrl,
           timeout: options.timeout,
-          defaultHeaders: {
-            'HTTP-Referer': 'https://aionui.com',
-            'X-Title': 'AionUi',
-          },
+          defaultHeaders: defaultOpenAIHeaders,
           ...(options.baseConfig as OpenAIClientConfig),
         };
 

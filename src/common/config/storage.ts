@@ -6,6 +6,7 @@
 
 import type { AcpBackend, AcpBackendAll, AcpBackendConfig } from '@/common/types/acpTypes';
 import type { SpeechToTextConfig } from '@/common/types/speech';
+import type { WePulseConfig } from './wepulse';
 import { storage } from '@office-ai/platform';
 
 /**
@@ -42,6 +43,7 @@ export interface IConfigStorageRefer {
     yoloMode?: boolean;
     sandboxMode?: 'read-only' | 'workspace-write' | 'danger-full-access';
   };
+  'wepulse.config'?: WePulseConfig;
   'acp.config': {
     [backend in AcpBackend]?: {
       authMethodId?: string;

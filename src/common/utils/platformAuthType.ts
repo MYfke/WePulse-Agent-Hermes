@@ -5,7 +5,7 @@
  */
 
 import { AuthType } from '@office-ai/aioncli-core';
-import { isNewApiPlatform } from './platformConstants';
+import { isNewApiPlatform, isWePulseSub2apiPlatform } from './platformConstants';
 
 /**
  * 根据平台名称获取对应的认证类型
@@ -14,6 +14,10 @@ import { isNewApiPlatform } from './platformConstants';
  */
 export function getAuthTypeFromPlatform(platform: string): AuthType {
   const platformLower = platform?.toLowerCase() || '';
+
+  if (isWePulseSub2apiPlatform(platform)) {
+    return AuthType.USE_OPENAI;
+  }
 
   // Gemini 相关平台
   if (platformLower.includes('gemini-with-google-auth')) {

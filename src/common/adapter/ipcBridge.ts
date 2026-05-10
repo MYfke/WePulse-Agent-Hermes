@@ -11,6 +11,7 @@ import type { McpSource } from '../../process/services/mcpServices/McpProtocol';
 import type { AgentBackend, AcpModelInfo } from '../types/acpTypes';
 import type { SlashCommandItem } from '../chat/slash/types';
 import type { IMcpServer, IProvider, TChatConversation, TProviderWithModel, ICssTheme } from '../config/storage';
+import type { WePulseConfigUpdateRequest, WePulseLoginRequest, WePulseStatus } from '../config/wepulse';
 import type { PreviewHistoryTarget, PreviewSnapshotInfo } from '../types/preview';
 import type {
   UpdateCheckRequest,
@@ -396,6 +397,16 @@ export const googleAuth = {
   login: bridge.buildProvider<IBridgeResponse<{ account: string }>, { proxy?: string }>('google.auth.login'),
   logout: bridge.buildProvider<void, {}>('google.auth.logout'),
   status: bridge.buildProvider<IBridgeResponse<{ account: string }>, { proxy?: string }>('google.auth.status'),
+};
+
+export const wepulseAuth = {
+  login: bridge.buildProvider<IBridgeResponse<WePulseStatus>, WePulseLoginRequest>('wepulse.auth.login'),
+  logout: bridge.buildProvider<IBridgeResponse<WePulseStatus>, void>('wepulse.auth.logout'),
+  status: bridge.buildProvider<IBridgeResponse<WePulseStatus>, void>('wepulse.auth.status'),
+  updateConfig: bridge.buildProvider<IBridgeResponse<WePulseStatus>, WePulseConfigUpdateRequest>(
+    'wepulse.auth.update-config'
+  ),
+  syncModels: bridge.buildProvider<IBridgeResponse<WePulseStatus>, void>('wepulse.auth.sync-models'),
 };
 
 // 订阅状态查询：用于动态决定是否展示 gemini-3.1-pro-preview / subscription check for Gemini models

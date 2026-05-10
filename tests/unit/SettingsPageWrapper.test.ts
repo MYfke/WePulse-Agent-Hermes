@@ -4,6 +4,7 @@ import { getBuiltinSettingsNavItems } from '@/renderer/pages/settings/components
 const t = (key: string, options?: { defaultValue?: string }) => {
   const labels: Record<string, string> = {
     'settings.gemini': 'Gemini',
+    'settings.wepulse.title': 'WePulse',
     'settings.model': 'Models',
     'settings.assistants': 'Assistants',
     'settings.agents': 'Agents',
@@ -24,6 +25,7 @@ describe('getBuiltinSettingsNavItems', () => {
 
     expect(items.map((item) => item.id)).toEqual([
       'gemini',
+      'wepulse',
       'agent',
       'model',
       'assistants',
@@ -37,6 +39,7 @@ describe('getBuiltinSettingsNavItems', () => {
 
     expect(items.map((item) => item.label)).toEqual([
       'Gemini',
+      'WePulse',
       'Agents',
       'Models',
       'Assistants',

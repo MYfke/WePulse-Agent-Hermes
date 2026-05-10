@@ -51,15 +51,15 @@ function getCacheRootDir() {
 
   if (process.platform === 'win32') {
     const localAppData = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local');
-    return path.join(localAppData, 'AionUi', 'cache', 'bundled-bun');
+    return path.join(localAppData, 'WePulse-Hermes', 'cache', 'bundled-bun');
   }
 
   if (process.platform === 'darwin') {
-    return path.join(os.homedir(), 'Library', 'Caches', 'AionUi', 'bundled-bun');
+    return path.join(os.homedir(), 'Library', 'Caches', 'WePulse-Hermes', 'bundled-bun');
   }
 
   const xdgCacheHome = process.env.XDG_CACHE_HOME || path.join(os.homedir(), '.cache');
-  return path.join(xdgCacheHome, 'AionUi', 'bundled-bun');
+  return path.join(xdgCacheHome, 'WePulse-Hermes', 'bundled-bun');
 }
 
 function getPlatformAsset(platform, arch, variant = 'default') {
@@ -200,7 +200,7 @@ function isCachedRuntimeValid(cacheRuntimeDir, platform, arch, version, variant 
     meta.arch === arch &&
     meta.version === version &&
     metaVariant === variant &&
-    meta.sourceType === 'download'
+    !!meta.sourceType
   );
 }
 
@@ -230,7 +230,7 @@ function downloadRuntimeIntoCache(cacheRuntimeDir, platform, arch, version, vari
   }
 
   const downloadUrl = getDownloadUrl(assetName, version);
-  const tempRoot = path.join(os.tmpdir(), 'aionui-bundled-bun', version, `${platform}-${arch}-${variant}`);
+  const tempRoot = path.join(os.tmpdir(), 'wepulse-hermes-bundled-bun', version, `${platform}-${arch}-${variant}`);
   const tempZipPath = path.join(tempRoot, assetName);
   const extractedDir = path.join(tempRoot, 'extracted');
 
@@ -274,6 +274,92 @@ function downloadRuntimeIntoCache(cacheRuntimeDir, platform, arch, version, vari
   };
 }
 
+function getLocalRuntimeDirectory(platform, arch) {
+  if (platform !== process.platform || arch !== process.arch) {
+    return null;
+  }
+
+  const configured = process.env.WEPULSE_HERMES_BUN_PATH || process.env.AIONUI_BUN_PATH;
+  const candidates = [];
+
+  if (configured && configured.trim()) {
+    candidates.push(path.resolve(configured.trim()));
+  }
+
+  try {
+    const locator = process.platform === 'win32' ? 'where' : 'which';
+    const output = execFileSync(locator, ['bun'], {
+      stdio: ['ignore', 'pipe', 'ignore'],
+      timeout: 5000,
+      encoding: 'utf-8',
+    });
+    const first = output
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .find(Boolean);
+    if (first) {
+      candidates.push(first);
+    }
+  } catch {
+    // No local bun in PATH.
+  }
+
+  const runtimeFileName = platform === 'win32' ? 'bun.exe' : 'bun';
+  for (const candidate of candidates) {
+    const statPath =
+      fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()
+        ? path.join(candidate, runtimeFileName)
+        : candidate;
+    if (path.basename(statPath) === runtimeFileName && fs.existsSync(statPath)) {
+      return path.dirname(statPath);
+    }
+  }
+
+  return null;
+}
+
+function copyLocalRuntimeIntoCache(cacheRuntimeDir, platform, arch, version, variant = 'default') {
+  const localRuntimeDir = getLocalRuntimeDirectory(platform, arch);
+  if (!localRuntimeDir) return null;
+
+  removeDirectorySafe(cacheRuntimeDir);
+  ensureDirectory(cacheRuntimeDir);
+  const copied = copyRuntimeFromDirectory(localRuntimeDir, cacheRuntimeDir, platform);
+
+  let localVersion = null;
+  try {
+    const runtimeFileName = platform === 'win32' ? 'bun.exe' : 'bun';
+    localVersion = execFileSync(path.join(localRuntimeDir, runtimeFileName), ['--version'], {
+      stdio: ['ignore', 'pipe', 'ignore'],
+      timeout: 5000,
+      encoding: 'utf-8',
+    }).trim();
+  } catch {
+    localVersion = null;
+  }
+
+  const cacheMeta = {
+    platform,
+    arch,
+    version,
+    variant,
+    sourceType: 'local',
+    source: {
+      dir: localRuntimeDir,
+      version: localVersion,
+    },
+    updatedAt: new Date().toISOString(),
+  };
+  writeCacheMeta(cacheRuntimeDir, cacheMeta);
+
+  return {
+    sourceType: 'local',
+    source: cacheMeta.source,
+    files: copied,
+    cacheMeta,
+  };
+}
+
 function prepareVariant(projectRoot, platform, arch, runtimeVersion, variant) {
   const cacheRootDir = getCacheRootDir();
   const runtimeKey = `${platform}-${arch}`;
@@ -299,11 +385,13 @@ function prepareVariant(projectRoot, platform, arch, runtimeVersion, variant) {
       files: copyRuntimeFromDirectory(cacheRuntimeDir, targetDir, platform),
     };
   } else {
-    const downloadResult = downloadRuntimeIntoCache(cacheRuntimeDir, platform, arch, runtimeVersion, variant);
-    cacheMeta = downloadResult.cacheMeta;
+    const runtimeResult =
+      copyLocalRuntimeIntoCache(cacheRuntimeDir, platform, arch, runtimeVersion, variant) ||
+      downloadRuntimeIntoCache(cacheRuntimeDir, platform, arch, runtimeVersion, variant);
+    cacheMeta = runtimeResult.cacheMeta;
     prepareResult = {
-      sourceType: downloadResult.sourceType,
-      source: downloadResult.source,
+      sourceType: runtimeResult.sourceType,
+      source: runtimeResult.source,
       files: copyRuntimeFromDirectory(cacheRuntimeDir, targetDir, platform),
     };
   }

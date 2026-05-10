@@ -9,6 +9,7 @@
  * New API gateway platform identifier
  */
 export const NEW_API_PLATFORM_ID = 'new-api';
+export { WEPULSE_SUB2API_PLATFORM_ID, isWePulseSub2apiPlatform } from '@/common/config/wepulse';
 
 /**
  * 检查平台是否为 New API 网关类型

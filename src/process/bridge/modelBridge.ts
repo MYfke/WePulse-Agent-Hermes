@@ -21,11 +21,13 @@ import {
 } from '@/common/utils/protocolDetector';
 import { isGoogleApisHost } from '@/common/utils/urlValidation';
 import OpenAI from 'openai';
-import { isNewApiPlatform } from '@/common/utils/platformConstants';
+import { isNewApiPlatform, isWePulseSub2apiPlatform } from '@/common/utils/platformConstants';
+import { WEPULSE_HERMES_CLIENT_TITLE } from '@/common/config/wepulse';
 import { ipcBridge } from '@/common';
 import { ProcessConfig } from '@process/utils/initStorage';
 import { ExtensionRegistry } from '@process/extensions';
 import { BedrockClient, ListInferenceProfilesCommand } from '@aws-sdk/client-bedrock';
+import { ensureWePulseProviderSession } from '@process/services/wepulseAuthService';
 
 /**
  * OpenAI 兼容 API 的常见路径格式
@@ -79,6 +81,10 @@ function getBedrockModelDisplayName(modelId: string): string {
  */
 export async function getMergedModelProviders(): Promise<IProvider[]> {
   try {
+    await ensureWePulseProviderSession().catch((error) => {
+      console.warn('[ModelBridge] Failed to refresh WePulse provider session:', error);
+    });
+
     const data = await ProcessConfig.get('model.config');
     const sourceList = Array.isArray(data) ? data : [];
 
@@ -429,6 +435,8 @@ export function initModelBridge(): void {
       return { success: false, msg: 'API key is required. Please configure your API key in settings.' };
     }
 
+    const userAgent = isWePulseSub2apiPlatform(platform) ? WEPULSE_HERMES_CLIENT_TITLE : 'AionUI/1.0';
+
     try {
       const openai = new OpenAI({
         baseURL: base_url,
@@ -436,7 +444,7 @@ export function initModelBridge(): void {
         // 使用自定义 User-Agent，避免某些 API 中转站（如 packyapi）拦截 OpenAI SDK 默认的 User-Agent
         // Use custom User-Agent to avoid some API proxies (like packyapi) blocking OpenAI SDK's default User-Agent
         defaultHeaders: {
-          'User-Agent': 'AionUI/1.0',
+          'User-Agent': userAgent,
         },
       });
 

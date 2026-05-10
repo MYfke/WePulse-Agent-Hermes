@@ -1,4 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { ipcBridge } from '@/common';
+import type { WePulseStatus } from '@/common/config/wepulse';
 import { withCsrfToken, hasValidCsrfToken, clearCookie } from '@process/webserver/middleware/csrfClient';
 import { CSRF_COOKIE_NAME } from '@process/webserver/config/constants';
 
@@ -45,6 +47,13 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 const AUTH_USER_ENDPOINT = '/api/auth/user';
 
 const isDesktopRuntime = typeof window !== 'undefined' && Boolean(window.electronAPI);
+
+function getDesktopAuthUser(status: WePulseStatus): AuthUser {
+  return {
+    id: String(status.account?.userId || status.account?.accountId || 'wepulse'),
+    username: status.account?.phone || 'WePulse',
+  };
+}
 
 // Clear expired auth cache including cookies and localStorage
 // 清除过期的认证缓存，包括 Cookie 和 localStorage
@@ -107,8 +116,21 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
 
   const refresh = useCallback(async () => {
     if (isDesktopRuntime) {
-      setStatus('authenticated');
-      setUser(null);
+      setStatus('checking');
+      try {
+        const result = await ipcBridge.wepulseAuth.status.invoke();
+        if (result.success && result.data?.authenticated) {
+          setUser(getDesktopAuthUser(result.data));
+          setStatus('authenticated');
+        } else {
+          setUser(null);
+          setStatus('unauthenticated');
+        }
+      } catch (error) {
+        console.error('Failed to refresh WePulse auth status:', error);
+        setUser(null);
+        setStatus('unauthenticated');
+      }
       setReady(true);
       return;
     }
@@ -139,6 +161,19 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
   const login = useCallback(async ({ username, password, remember }: LoginParams): Promise<LoginResult> => {
     try {
       if (isDesktopRuntime) {
+        const result = await ipcBridge.wepulseAuth.login.invoke({
+          phone: username,
+          password,
+        });
+        if (!result.success || !result.data?.authenticated) {
+          return {
+            success: false,
+            message: result.msg || 'WePulse login failed',
+            code: 'unknown',
+          };
+        }
+        setUser(getDesktopAuthUser(result.data));
+        setStatus('authenticated');
         setReady(true);
         return { success: true };
       }
@@ -240,8 +275,9 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
 
   const logout = useCallback(async () => {
     if (isDesktopRuntime) {
+      await ipcBridge.wepulseAuth.logout.invoke();
       setUser(null);
-      setStatus('authenticated');
+      setStatus('unauthenticated');
       setReady(true);
       return;
     }

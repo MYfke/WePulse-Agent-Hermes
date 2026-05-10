@@ -1,12 +1,12 @@
 {
-  "name": "AionUi",
+  "name": "wepulse-hermes",
   "version": "1.9.25",
-  "description": "Transform your command-line AI agent into a modern, efficient AI Chat interface.",
+  "description": "WePulse Hermes desktop AI agent.",
   "keywords": [],
   "license": "Apache-2.0",
   "author": {
-    "name": "AionUi",
-    "email": "service@aionui.com"
+    "name": "WePulse",
+    "email": "service@wepulse.cn"
   },
   "main": "./out/main/index.js",
   "scripts": {
@@ -250,5 +250,5 @@
   "patchedDependencies": {
     "7zip-bin@5.2.0": "patches/7zip-bin@5.2.0.patch"
   },
-  "productName": "AionUi"
+  "productName": "WePulse-Hermes"
 }

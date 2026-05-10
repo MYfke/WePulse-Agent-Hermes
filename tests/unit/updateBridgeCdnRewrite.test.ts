@@ -72,28 +72,29 @@ const makeGitHubReleaseResponse = () => [
     tag_name: 'v1.9.22',
     name: 'v1.9.22',
     body: 'release notes',
-    html_url: 'https://github.com/iOfficeAI/AionUi/releases/tag/v1.9.22',
+    html_url: 'https://github.com/MYfke/WePulse-Hermes/releases/tag/v1.9.22',
     published_at: '2026-04-29T00:00:00Z',
     prerelease: false,
     draft: false,
     assets: [
       {
-        name: 'AionUi-1.9.22-mac-arm64.dmg',
+        name: 'WePulse-Hermes-1.9.22-mac-arm64.dmg',
         browser_download_url:
-          'https://github.com/iOfficeAI/AionUi/releases/download/v1.9.22/AionUi-1.9.22-mac-arm64.dmg',
+          'https://github.com/MYfke/WePulse-Hermes/releases/download/v1.9.22/WePulse-Hermes-1.9.22-mac-arm64.dmg',
         size: 123,
         content_type: 'application/x-apple-diskimage',
       },
       {
-        name: 'AionUi-1.9.22-win-x64.exe',
-        browser_download_url: 'https://github.com/iOfficeAI/AionUi/releases/download/v1.9.22/AionUi-1.9.22-win-x64.exe',
+        name: 'WePulse-Hermes-1.9.22-win-x64.exe',
+        browser_download_url:
+          'https://github.com/MYfke/WePulse-Hermes/releases/download/v1.9.22/WePulse-Hermes-1.9.22-win-x64.exe',
         size: 456,
         content_type: 'application/vnd.microsoft.portable-executable',
       },
       {
-        name: 'AionUi-1.9.22-linux-amd64.deb',
+        name: 'WePulse-Hermes-1.9.22-linux-amd64.deb',
         browser_download_url:
-          'https://github.com/iOfficeAI/AionUi/releases/download/v1.9.22/AionUi-1.9.22-linux-amd64.deb',
+          'https://github.com/MYfke/WePulse-Hermes/releases/download/v1.9.22/WePulse-Hermes-1.9.22-linux-amd64.deb',
         size: 789,
       },
     ],
@@ -113,12 +114,12 @@ const getCheckHandler = async () => {
   return lastCall[0];
 };
 
-describe('updateBridge CDN URL rewriting', () => {
+describe('updateBridge GitHub release URL mapping', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('rewrites asset.url to the CDN path and keeps GitHub URL in fallbackUrl', async () => {
+  it('uses the GitHub release asset URL directly', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => makeGitHubReleaseResponse(),
@@ -127,27 +128,29 @@ describe('updateBridge CDN URL rewriting', () => {
 
     try {
       const handler = await getCheckHandler();
-      const result = await handler({ repo: 'iOfficeAI/AionUi' });
+      const result = await handler({ repo: 'MYfke/WePulse-Hermes' });
 
       expect(result.success).toBe(true);
       const assets = result.data?.latest?.assets ?? [];
       expect(assets.length).toBe(3);
 
-      const macAsset = assets.find((a: { name: string }) => a.name === 'AionUi-1.9.22-mac-arm64.dmg');
+      const macAsset = assets.find((a: { name: string }) => a.name === 'WePulse-Hermes-1.9.22-mac-arm64.dmg');
       expect(macAsset).toBeDefined();
-      expect(macAsset?.url).toBe('https://static.aionui.com/releases/1.9.22/AionUi-1.9.22-mac-arm64.dmg');
-      expect(macAsset?.fallbackUrl).toBe(
-        'https://github.com/iOfficeAI/AionUi/releases/download/v1.9.22/AionUi-1.9.22-mac-arm64.dmg'
+      expect(macAsset?.url).toBe(
+        'https://github.com/MYfke/WePulse-Hermes/releases/download/v1.9.22/WePulse-Hermes-1.9.22-mac-arm64.dmg'
       );
+      expect(macAsset?.fallbackUrl).toBeUndefined();
 
-      const linuxAsset = assets.find((a: { name: string }) => a.name === 'AionUi-1.9.22-linux-amd64.deb');
-      expect(linuxAsset?.url).toBe('https://static.aionui.com/releases/1.9.22/AionUi-1.9.22-linux-amd64.deb');
+      const linuxAsset = assets.find((a: { name: string }) => a.name === 'WePulse-Hermes-1.9.22-linux-amd64.deb');
+      expect(linuxAsset?.url).toBe(
+        'https://github.com/MYfke/WePulse-Hermes/releases/download/v1.9.22/WePulse-Hermes-1.9.22-linux-amd64.deb'
+      );
     } finally {
       vi.unstubAllGlobals();
     }
   });
 
-  it('uses the normalized version (no v prefix) in the CDN path', async () => {
+  it('keeps the original release asset tag path', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => makeGitHubReleaseResponse(),
@@ -156,18 +159,17 @@ describe('updateBridge CDN URL rewriting', () => {
 
     try {
       const handler = await getCheckHandler();
-      const result = await handler({ repo: 'iOfficeAI/AionUi' });
+      const result = await handler({ repo: 'MYfke/WePulse-Hermes' });
       const asset = result.data?.latest?.assets?.[0];
-      expect(asset?.url).toMatch(/^https:\/\/static\.aionui\.com\/releases\/1\.9\.22\//);
-      expect(asset?.url).not.toMatch(/\/v1\.9\.22\//);
+      expect(asset?.url).toMatch(/^https:\/\/github\.com\/MYfke\/WePulse-Hermes\/releases\/download\/v1\.9\.22\//);
     } finally {
       vi.unstubAllGlobals();
     }
   });
 });
 
-describe('updateBridge allowlist includes CDN host', () => {
-  it('accepts static.aionui.com URLs for download', async () => {
+describe('updateBridge download allowlist', () => {
+  it('accepts GitHub release URLs for download', async () => {
     vi.resetModules();
     vi.clearAllMocks();
 
@@ -194,8 +196,8 @@ describe('updateBridge allowlist includes CDN host', () => {
       const handler = lastCall[0];
 
       const result = await handler({
-        url: 'https://static.aionui.com/releases/1.9.22/AionUi-1.9.22-mac-arm64.dmg',
-        fileName: 'AionUi-1.9.22-mac-arm64.dmg',
+        url: 'https://github.com/MYfke/WePulse-Hermes/releases/download/v1.9.22/WePulse-Hermes-1.9.22-mac-arm64.dmg',
+        fileName: 'WePulse-Hermes-1.9.22-mac-arm64.dmg',
       });
 
       expect(result.success).toBe(true);

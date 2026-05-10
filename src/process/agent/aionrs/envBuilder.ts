@@ -30,6 +30,7 @@ function mapProvider(model: TProviderWithModel): AionrsProvider {
     // custom / new-api default to OpenAI-compatible protocol
     custom: 'openai',
     'new-api': 'openai',
+    'wepulse-sub2api': 'openai',
   };
   return mapping[model.platform] ?? 'openai';
 }

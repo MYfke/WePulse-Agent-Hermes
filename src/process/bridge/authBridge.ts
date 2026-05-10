@@ -13,9 +13,57 @@ import {
   Storage,
 } from '@office-ai/aioncli-core';
 import { ipcBridge } from '@/common';
+import { wePulseAuthService } from '@process/services/wepulseAuthService';
 import { promises as fsAsync } from 'node:fs';
 
+function toAuthBridgeError(error: unknown): { success: false; msg: string } {
+  return {
+    success: false,
+    msg: error instanceof Error ? error.message : String(error),
+  };
+}
+
 export function initAuthBridge(): void {
+  ipcBridge.wepulseAuth.status.provider(async () => {
+    try {
+      return { success: true, data: await wePulseAuthService.status() };
+    } catch (error) {
+      return toAuthBridgeError(error);
+    }
+  });
+
+  ipcBridge.wepulseAuth.login.provider(async (request) => {
+    try {
+      return { success: true, data: await wePulseAuthService.login(request) };
+    } catch (error) {
+      return toAuthBridgeError(error);
+    }
+  });
+
+  ipcBridge.wepulseAuth.logout.provider(async () => {
+    try {
+      return { success: true, data: await wePulseAuthService.logout() };
+    } catch (error) {
+      return toAuthBridgeError(error);
+    }
+  });
+
+  ipcBridge.wepulseAuth.updateConfig.provider(async ({ sub2apiBaseUrl }) => {
+    try {
+      return { success: true, data: await wePulseAuthService.updateConfig(sub2apiBaseUrl) };
+    } catch (error) {
+      return toAuthBridgeError(error);
+    }
+  });
+
+  ipcBridge.wepulseAuth.syncModels.provider(async () => {
+    try {
+      return { success: true, data: await wePulseAuthService.syncModels() };
+    } catch (error) {
+      return toAuthBridgeError(error);
+    }
+  });
+
   ipcBridge.googleAuth.status.provider(async ({ proxy }) => {
     try {
       const credsPath = Storage.getOAuthCredsPath();
