@@ -89,3 +89,17 @@ export interface AutoUpdateStatus {
   progress?: AutoUpdateProgress;
   error?: string;
 }
+
+export type HermesAgentUpdateStatus = {
+  installed: boolean;
+  updateAvailable: boolean | null;
+  version?: string;
+  path?: string;
+  versionOutput?: string;
+  checkOutput?: string;
+  checkError?: string;
+};
+
+export type HermesAgentUpdateResult = HermesAgentUpdateStatus & {
+  updateOutput: string;
+};

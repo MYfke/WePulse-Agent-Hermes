@@ -5,6 +5,7 @@
  */
 
 import type { IActionContext, IActionResult, IRegisteredAction, ActionHandler } from './types';
+import { APP_DISPLAY_NAME } from '@/common/config/appBrand';
 import { PlatformActionNames, createSuccessResponse, createErrorResponse } from './types';
 import { getPairingService } from '../pairing/PairingService';
 import {
@@ -121,14 +122,14 @@ export const handlePairingShow: ActionHandler = async (context) => {
       text: [
         '🔗 <b>Device Pairing</b>',
         '',
-        'Please approve this pairing request in the AionUi app:',
+        `Please approve this pairing request in the ${APP_DISPLAY_NAME} app:`,
         '',
         `<code>${code}</code>`,
         '',
         `⏱ Valid for: ${expiresInMinutes} minutes`,
         '',
         '<b>Steps:</b>',
-        '1. Open AionUi app',
+        `1. Open ${APP_DISPLAY_NAME} app`,
         '2. Go to WebUI → Channels',
         '3. Click "Approve" in pending pairing requests',
       ].join('\n'),
@@ -172,7 +173,7 @@ export const handlePairingRefresh: ActionHandler = async (context) => {
         '',
         `⏱ Valid for: ${expiresInMinutes} minutes`,
         '',
-        'Please approve this pairing request in AionUi settings.',
+        `Please approve this pairing request in ${APP_DISPLAY_NAME} settings.`,
       ].join('\n'),
       parseMode: 'HTML',
       replyMarkup: getPairingCodeMarkup(platform, code),
@@ -219,7 +220,7 @@ export const handlePairingCheck: ActionHandler = async (context) => {
         `Pairing code: <code>${pendingRequest.code}</code>`,
         `Time remaining: ${expiresInMinutes} minutes`,
         '',
-        'Please approve the pairing request in AionUi settings.',
+        `Please approve the pairing request in ${APP_DISPLAY_NAME} settings.`,
       ].join('\n'),
       parseMode: 'HTML',
       replyMarkup: getPairingStatusMarkup(platform, pendingRequest.code),
@@ -250,18 +251,18 @@ export const handlePairingHelp: ActionHandler = async (context) => {
       '❓ <b>Pairing Help</b>',
       '',
       '<b>What is pairing?</b>',
-      `Pairing links your ${platformName} account with the local AionUi application.`,
+      `Pairing links your ${platformName} account with the local ${APP_DISPLAY_NAME} application.`,
       'You need to pair before using the AI assistant.',
       '',
       '<b>Pairing steps:</b>',
       '1. Get pairing code (send any message)',
-      '2. Open AionUi app',
+      `2. Open ${APP_DISPLAY_NAME} app`,
       '3. Go to WebUI → Channels',
       '4. Click "Approve" in pending requests',
       '',
       '<b>FAQ:</b>',
       '• Pairing code valid for 10 minutes, refresh if expired',
-      '• AionUi app must be running',
+      `• ${APP_DISPLAY_NAME} app must be running`,
       '• Ensure network connection is stable',
     ].join('\n'),
     parseMode: 'HTML',

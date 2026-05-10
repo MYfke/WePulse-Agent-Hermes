@@ -148,7 +148,7 @@ describe('channelSendProtocol', () => {
   it('still rejects arbitrary files that only happen to live under the app data root', async () => {
     const { resolveChannelSendProtocol } = await import('@process/channels/utils/channelSendProtocol');
     const workspace = path.join(TEST_DATA_ROOT, 'codex-temp-100');
-    const dbFile = path.join(TEST_DATA_ROOT, 'aionui.db');
+    const dbFile = path.join(TEST_DATA_ROOT, 'wepulse-hermes.db');
 
     fs.mkdirSync(workspace, { recursive: true });
     fs.writeFileSync(dbFile, 'not-shareable');
@@ -157,8 +157,8 @@ describe('channelSendProtocol', () => {
     const parsed = await resolveChannelSendProtocol(
       buildChannelSendProtocol({
         type: 'file',
-        path: '../aionui.db',
-        fileName: 'aionui.db',
+        path: '../wepulse-hermes.db',
+        fileName: 'wepulse-hermes.db',
       }),
       'conv-reject-data-root-file'
     );
@@ -167,8 +167,8 @@ describe('channelSendProtocol', () => {
     expect(parsed.rejectedActions).toEqual([
       {
         type: 'file',
-        path: '../aionui.db',
-        fileName: 'aionui.db',
+        path: '../wepulse-hermes.db',
+        fileName: 'wepulse-hermes.db',
         reason: 'outside_allowed',
       },
     ]);

@@ -6,14 +6,15 @@
 
 import type { BrowserWindow } from 'electron';
 import { ipcBridge } from '@/common';
+import { APP_PROTOCOL_SCHEME } from '@/common/config/appBrand';
 
-export const PROTOCOL_SCHEME = 'aionui';
+export const PROTOCOL_SCHEME = APP_PROTOCOL_SCHEME;
 
 /**
- * Parse an aionui:// URL into action and params.
+ * Parse a wepulse-hermes:// URL into action and params.
  * Supports two formats:
- *   1. aionui://add-provider?baseUrl=xxx&apiKey=xxx
- *   2. aionui://provider/add?v=1&data=<base64 JSON>  (one-api / new-api style)
+ *   1. wepulse-hermes://add-provider?baseUrl=xxx&apiKey=xxx
+ *   2. wepulse-hermes://provider/add?v=1&data=<base64 JSON>  (one-api / new-api style)
  */
 export const parseDeepLinkUrl = (url: string): { action: string; params: Record<string, string> } | null => {
   try {

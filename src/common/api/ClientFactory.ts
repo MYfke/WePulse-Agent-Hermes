@@ -13,6 +13,7 @@ import type { RotatingApiClientOptions } from './RotatingApiClient';
 import { getProviderAuthType } from '../utils/platformAuthType';
 import { isNewApiPlatform, isWePulseSub2apiPlatform } from '../utils/platformConstants';
 import { WEPULSE_HERMES_CLIENT_TITLE } from '../config/wepulse';
+import { APP_DISPLAY_NAME, APP_WEBSITE_URL } from '../config/appBrand';
 
 export interface ClientOptions {
   timeout?: number;
@@ -73,8 +74,8 @@ export class ClientFactory {
     const isWePulseSub2api = isWePulseSub2apiPlatform(provider.platform);
     const baseUrl = isNewApi ? normalizeNewApiBaseUrl(provider.baseUrl, authType) : provider.baseUrl;
     const defaultOpenAIHeaders = {
-      'HTTP-Referer': isWePulseSub2api ? 'https://wepulse.cn' : 'https://aionui.com',
-      'X-Title': isWePulseSub2api ? WEPULSE_HERMES_CLIENT_TITLE : 'AionUi',
+      'HTTP-Referer': APP_WEBSITE_URL,
+      'X-Title': isWePulseSub2api ? WEPULSE_HERMES_CLIENT_TITLE : APP_DISPLAY_NAME,
     };
 
     switch (authType) {

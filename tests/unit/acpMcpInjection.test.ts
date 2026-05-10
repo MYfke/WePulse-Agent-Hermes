@@ -560,7 +560,7 @@ describe('Step 8: Task #3 IPC mcpStatus events', () => {
 //
 // DIAGNOSIS COMMANDS:
 //   grep "Injecting team MCP server" ~/Library/Logs/AionUi/*.log
-//   sqlite3 ~/Library/.../aionui.db "SELECT extra FROM conversations WHERE id='<agentConvId>'"
+//   sqlite3 ~/Library/.../wepulse-hermes.db "SELECT extra FROM conversations WHERE id='<agentConvId>'"
 //     → extra.teamMcpStdioConfig should be non-null
 //   ACP_PERF_LOG=1 bun run dev
 //     → session/load or session/new request body logged, check mcpServers field

@@ -1,4 +1,5 @@
 import path from 'path';
+import { APP_DEV_NAME, APP_MULTI_INSTANCE_ENV, APP_SECONDARY_DEV_NAME } from '../config/appBrand';
 import type { IPlatformServices } from './IPlatformServices';
 import { NodePlatformServices } from './NodePlatformServices';
 
@@ -9,8 +10,8 @@ let _services: IPlatformServices | null = null;
  * Centralised so that every call-site stays in sync.
  */
 export function getDevAppName(): string {
-  const isMultiInstance = process.env.AIONUI_MULTI_INSTANCE === '1';
-  return isMultiInstance ? 'AionUi-Dev-2' : 'AionUi-Dev';
+  const isMultiInstance = process.env[APP_MULTI_INSTANCE_ENV] === '1';
+  return isMultiInstance ? APP_SECONDARY_DEV_NAME : APP_DEV_NAME;
 }
 
 export function registerPlatformServices(services: IPlatformServices): void {

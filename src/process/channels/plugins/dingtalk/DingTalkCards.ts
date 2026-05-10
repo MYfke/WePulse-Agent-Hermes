@@ -5,6 +5,7 @@
  */
 
 import type { ChannelAgentType } from '../../types';
+import { APP_DISPLAY_NAME } from '@/common/config/appBrand';
 
 /**
  * DingTalk Message Cards for Personal Assistant
@@ -81,8 +82,8 @@ function btn(label: string, action: string, params?: Record<string, string>): Di
  */
 export function createMainMenuCard(): DingTalkCard {
   return {
-    title: 'AionUi Assistant',
-    text: '### AionUi Assistant\n\nWelcome! Choose an action below:',
+    title: `${APP_DISPLAY_NAME} Assistant`,
+    text: `### ${APP_DISPLAY_NAME} Assistant\n\nWelcome! Choose an action below:`,
     btnOrientation: '1',
     btns: [
       btn('New Chat', 'session.new'),
@@ -102,11 +103,11 @@ export function createPairingCard(pairingCode: string): DingTalkCard {
     text: [
       '### Pairing Required',
       '',
-      'Please pair your account with AionUi:',
+      `Please pair your account with ${APP_DISPLAY_NAME}:`,
       '',
       `**Pairing Code:** \`${pairingCode}\``,
       '',
-      '1. Open AionUi settings',
+      `1. Open ${APP_DISPLAY_NAME} settings`,
       '2. Go to Channels > DingTalk',
       '3. Enter this pairing code',
       '',
@@ -130,8 +131,8 @@ export function createPairingStatusCard(pairingCode: string): DingTalkCard {
       '',
       `**Pairing Code:** \`${pairingCode}\``,
       '',
-      'Please approve in AionUi settings:',
-      '1. Open AionUi app',
+      `Please approve in ${APP_DISPLAY_NAME} settings:`,
+      `1. Open ${APP_DISPLAY_NAME} app`,
       '2. Go to WebUI > Channels',
       '3. Click "Approve" for this code',
     ].join('\n'),
@@ -150,19 +151,19 @@ export function createPairingHelpCard(): DingTalkCard {
       '### Pairing Help',
       '',
       '**What is pairing?**',
-      'Pairing links your DingTalk account with the local AionUi application.',
+      `Pairing links your DingTalk account with the local ${APP_DISPLAY_NAME} application.`,
       'You need to pair before using the AI assistant.',
       '',
       '**How to pair:**',
       '1. Send any message to this bot',
       '2. You will receive a pairing code',
-      '3. Open AionUi desktop app',
+      `3. Open ${APP_DISPLAY_NAME} desktop app`,
       '4. Go to WebUI > Channels > DingTalk',
       '5. Click "Approve" for your code',
       '',
       '**FAQ:**',
       '- Pairing code valid for 10 minutes',
-      '- AionUi app must be running',
+      `- ${APP_DISPLAY_NAME} app must be running`,
       '- One account can only pair once',
     ].join('\n'),
     btns: [btn('Get Pairing Code', 'pairing.show')],
@@ -245,11 +246,11 @@ export function createSessionStatusCard(session?: {
  */
 export function createHelpCard(): DingTalkCard {
   return {
-    title: 'AionUi Assistant Help',
+    title: `${APP_DISPLAY_NAME} Assistant Help`,
     text: [
-      '### AionUi Assistant Help',
+      `### ${APP_DISPLAY_NAME} Assistant Help`,
       '',
-      'A remote assistant to interact with AionUi via DingTalk.',
+      `A remote assistant to interact with ${APP_DISPLAY_NAME} via DingTalk.`,
       '',
       '**Common Actions:**',
       '- New Chat - Start a new session',
@@ -304,12 +305,12 @@ export function createPairingGuideCard(): DingTalkCard {
       '**First-time Setup:**',
       '1. Send any message to the bot',
       '2. Bot displays pairing code',
-      '3. Approve pairing in AionUi settings',
+      `3. Approve pairing in ${APP_DISPLAY_NAME} settings`,
       '4. Ready to use after pairing',
       '',
       '**Notes:**',
       '- Pairing code valid for 10 minutes',
-      '- AionUi app must be running',
+      `- ${APP_DISPLAY_NAME} app must be running`,
       '- One DingTalk account can only pair once',
     ].join('\n'),
     btns: [btn('Back to Help', 'help.show')],
@@ -394,9 +395,9 @@ export function createSettingsCard(): DingTalkCard {
     text: [
       '### Settings',
       '',
-      'Channel settings need to be configured in the AionUi app.',
+      `Channel settings need to be configured in the ${APP_DISPLAY_NAME} app.`,
       '',
-      'Open AionUi > WebUI > Channels',
+      `Open ${APP_DISPLAY_NAME} > WebUI > Channels`,
     ].join('\n'),
     btns: [btn('Back', 'help.show')],
   };

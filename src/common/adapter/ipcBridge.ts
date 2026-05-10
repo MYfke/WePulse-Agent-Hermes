@@ -20,6 +20,8 @@ import type {
   UpdateDownloadRequest,
   UpdateDownloadResult,
   AutoUpdateStatus,
+  HermesAgentUpdateResult,
+  HermesAgentUpdateStatus,
 } from '../update/updateTypes';
 import type { ProtocolDetectionRequest, ProtocolDetectionResponse } from '../utils/protocolDetector';
 import type { SpeechToTextRequest, SpeechToTextResult } from '../types/speech';
@@ -203,6 +205,11 @@ export const autoUpdate = {
   quitAndInstall: bridge.buildProvider<void, void>('auto-update.quit-and-install'),
   /** Auto-update status events */
   status: bridge.buildEmitter<AutoUpdateStatus>('auto-update.status'),
+};
+
+export const hermesAgent = {
+  checkUpdate: bridge.buildProvider<IBridgeResponse<HermesAgentUpdateStatus>, void>('hermes-agent.check-update'),
+  update: bridge.buildProvider<IBridgeResponse<HermesAgentUpdateResult>, void>('hermes-agent.update'),
 };
 
 export const starOffice = {
@@ -700,7 +707,7 @@ export const excelPreview = {
 
 // Deep link protocol handling / 深度链接协议处理
 export const deepLink = {
-  /** Emitted when app is opened via aionui:// protocol URL */
+  /** Emitted when app is opened via wepulse-hermes:// protocol URL */
   received: bridge.buildEmitter<{
     action: string; // e.g. 'add-provider'
     params: Record<string, string>; // parsed query params

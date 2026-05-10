@@ -12,6 +12,7 @@ import {
   electronTray as Tray,
 } from '@/common/electronSafe';
 import * as path from 'path';
+import { APP_DISPLAY_NAME } from '@/common/config/appBrand';
 import i18n from '@process/services/i18n';
 import { workerTaskManager } from '../task/workerTaskManagerSingleton';
 
@@ -250,7 +251,7 @@ export const createOrUpdateTray = (): void => {
   try {
     const icon = getTrayIcon();
     tray = new Tray(icon);
-    tray.setToolTip('AionUi');
+    tray.setToolTip(APP_DISPLAY_NAME);
     void buildTrayContextMenu().then((menu) => tray?.setContextMenu(menu));
 
     tray.on('double-click', () => {

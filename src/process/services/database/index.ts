@@ -1686,7 +1686,7 @@ let dbInstancePromise: Promise<AionUIDatabase> | null = null;
 let dbResolved: AionUIDatabase | null = null;
 
 function resolveDbPath(): string {
-  return path.join(getDataPath(), 'aionui.db');
+  return path.join(getDataPath(), 'wepulse-hermes.db');
 }
 
 export function getDatabase(): Promise<AionUIDatabase> {

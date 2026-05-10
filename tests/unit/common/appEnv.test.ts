@@ -11,8 +11,8 @@ describe('common/appEnv', () => {
 
   it('appends -dev suffix in dev builds', async () => {
     const { getEnvAwareName } = await import('../../../src/common/config/appEnv');
-    expect(getEnvAwareName('.aionui')).toBe('.aionui-dev');
-    expect(getEnvAwareName('.aionui-config')).toBe('.aionui-config-dev');
+    expect(getEnvAwareName('.wepulse-hermes')).toBe('.wepulse-hermes-dev');
+    expect(getEnvAwareName('.wepulse-hermes-config')).toBe('.wepulse-hermes-config-dev');
   });
 
   it('returns baseName unchanged in release builds', async () => {
@@ -20,7 +20,7 @@ describe('common/appEnv', () => {
       getPlatformServices: () => ({ paths: { isPackaged: () => true } }),
     }));
     const { getEnvAwareName } = await import('../../../src/common/config/appEnv');
-    expect(getEnvAwareName('.aionui')).toBe('.aionui');
-    expect(getEnvAwareName('.aionui-config')).toBe('.aionui-config');
+    expect(getEnvAwareName('.wepulse-hermes')).toBe('.wepulse-hermes');
+    expect(getEnvAwareName('.wepulse-hermes-config')).toBe('.wepulse-hermes-config');
   });
 });

@@ -11,6 +11,7 @@ import { ipcBridge } from '@/common';
 import AionModal from '@/renderer/components/base/AionModal';
 import MarkdownView from '@/renderer/components/Markdown';
 import type { UpdateDownloadProgressEvent, UpdateReleaseInfo, AutoUpdateStatus } from '@/common/update/updateTypes';
+import { APP_UPDATE_MODAL_EVENT } from '@/common/config/appBrand';
 import { useTranslation } from 'react-i18next';
 
 type UpdateStatus = 'checking' | 'upToDate' | 'available' | 'downloading' | 'downloaded' | 'success' | 'error';
@@ -188,11 +189,11 @@ const UpdateModal: React.FC = () => {
 
   useEffect(() => {
     const removeOpenListener = ipcBridge.update.open.on(handleOpenUpdateModal);
-    window.addEventListener('aionui-open-update-modal', handleOpenUpdateModal);
+    window.addEventListener(APP_UPDATE_MODAL_EVENT, handleOpenUpdateModal);
 
     return () => {
       removeOpenListener();
-      window.removeEventListener('aionui-open-update-modal', handleOpenUpdateModal);
+      window.removeEventListener(APP_UPDATE_MODAL_EVENT, handleOpenUpdateModal);
     };
   }, []);
 

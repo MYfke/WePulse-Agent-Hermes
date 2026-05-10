@@ -8,6 +8,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { agentRegistry } from '@process/agent/AgentRegistry';
+import { APP_DISPLAY_NAME } from '@/common/config/appBrand';
 import type { IProvider, TChatConversation, TProviderWithModel } from '@/common/config/storage';
 import { ProcessConfig } from '@process/utils/initStorage';
 import { conversationServiceSingleton } from '@/process/services/conversationServiceSingleton';
@@ -465,9 +466,9 @@ export const handleHelpShow: ActionHandler = async (context) => {
   return createSuccessResponse({
     type: 'text',
     text: [
-      '❓ <b>AionUi Assistant</b>',
+      `❓ <b>${APP_DISPLAY_NAME} Assistant</b>`,
       '',
-      'A remote assistant to interact with AionUi via Telegram.',
+      `A remote assistant to interact with ${APP_DISPLAY_NAME} via Telegram.`,
       '',
       '<b>Common Actions:</b>',
       '• 🆕 New Chat - Start a new session',
@@ -550,12 +551,12 @@ export const handleHelpPairing: ActionHandler = async (context) => {
       '<b>First-time Setup:</b>',
       '1. Send any message to the bot',
       '2. Bot displays pairing code',
-      '3. Approve pairing in AionUi settings',
+      `3. Approve pairing in ${APP_DISPLAY_NAME} settings`,
       '4. Ready to use after pairing',
       '',
       '<b>Notes:</b>',
       '• Pairing code valid for 10 minutes',
-      '• AionUi app must be running',
+      `• ${APP_DISPLAY_NAME} app must be running`,
       '• One Telegram account can only pair once',
     ].join('\n'),
     parseMode: 'HTML',
@@ -624,9 +625,9 @@ export const handleSettingsShow: ActionHandler = async (context) => {
     text: [
       '⚙️ <b>Settings</b>',
       '',
-      'Channel settings need to be configured in the AionUi app.',
+      `Channel settings need to be configured in the ${APP_DISPLAY_NAME} app.`,
       '',
-      'Open AionUi → WebUI → Channels',
+      `Open ${APP_DISPLAY_NAME} → WebUI → Channels`,
     ].join('\n'),
     parseMode: 'HTML',
     replyMarkup: createMainMenuKeyboard(),

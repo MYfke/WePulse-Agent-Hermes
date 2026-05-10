@@ -201,7 +201,7 @@ export interface IConfigStorageRefer {
 }
 
 export interface IEnvStorageRefer {
-  'aionui.dir': {
+  'wepulse-hermes.dir': {
     workDir: string;
     cacheDir: string;
   };

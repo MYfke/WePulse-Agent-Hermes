@@ -1,7 +1,10 @@
 import { existsSync, readFileSync } from 'fs';
 import os from 'os';
 import path from 'path';
+import { APP_DEV_NAME, APP_DISPLAY_NAME } from '@/common/config/appBrand';
 import type { IConfigStorageRefer, IMcpServer } from '@/common/config/storage';
+
+const CONFIG_FILE_NAME = 'wepulse-hermes-config.txt';
 
 // Keys allowed to migrate from Electron config to server config.
 // UI-only keys (theme, language, webui.desktop.*) and caches (acp.cachedModels)
@@ -30,21 +33,21 @@ export function getElectronConfigCandidatePaths(): string[] {
   const home = os.homedir();
   if (process.platform === 'darwin') {
     return [
-      path.join(home, '.aionui-config', 'aionui-config.txt'),
-      path.join(home, '.aionui-config-dev', 'aionui-config.txt'),
+      path.join(home, '.wepulse-hermes-config', CONFIG_FILE_NAME),
+      path.join(home, '.wepulse-hermes-config-dev', CONFIG_FILE_NAME),
     ];
   }
   if (process.platform === 'win32') {
     const appData = process.env.APPDATA ?? path.join(home, 'AppData', 'Roaming');
     return [
-      path.join(appData, 'AionUi', 'config', 'aionui-config.txt'),
-      path.join(appData, 'AionUi-Dev', 'config', 'aionui-config.txt'),
+      path.join(appData, APP_DISPLAY_NAME, 'config', CONFIG_FILE_NAME),
+      path.join(appData, APP_DEV_NAME, 'config', CONFIG_FILE_NAME),
     ];
   }
   // Linux and other platforms
   return [
-    path.join(home, '.config', 'AionUi', 'config', 'aionui-config.txt'),
-    path.join(home, '.config', 'AionUi-Dev', 'config', 'aionui-config.txt'),
+    path.join(home, '.config', APP_DISPLAY_NAME, 'config', CONFIG_FILE_NAME),
+    path.join(home, '.config', APP_DEV_NAME, 'config', CONFIG_FILE_NAME),
   ];
 }
 
@@ -91,7 +94,9 @@ export async function migrateFromElectronConfig(configStore: ConfigStore): Promi
     // Decode — if result is empty, the file is missing/corrupted; do NOT set flag
     const sourceData = decodeConfigFile(sourcePath);
     if (Object.keys(sourceData).length === 0) {
-      console.warn('[AionUi] Config migration: source file appears empty or corrupted, will retry next startup');
+      console.warn(
+        '[WePulse Hermes] Config migration: source file appears empty or corrupted, will retry next startup'
+      );
       return;
     }
 
@@ -116,16 +121,16 @@ export async function migrateFromElectronConfig(configStore: ConfigStore): Promi
     }
 
     await configStore.set('migration.electronConfigImported', true);
-    console.log('[AionUi] Config migrated from Electron desktop config:', sourcePath);
+    console.log('[WePulse Hermes] Config migrated from Electron desktop config:', sourcePath);
   } catch (error) {
-    console.warn('[AionUi] Config migration from Electron failed:', error);
+    console.warn('[WePulse Hermes] Config migration from Electron failed:', error);
   }
 }
 
 /**
  * Manual import: copy whitelisted keys from a specified config file into the
  * server config store. Runs on every startup when IMPORT_CONFIG_FROM is set.
- * @param sourcePath - absolute path to an aionui-config.txt file
+ * @param sourcePath - absolute path to a wepulse-hermes-config.txt file
  * @param overwrite  - if true, overwrite existing keys; if false, skip them
  * @param configStore - injected config store (uses ProcessConfig in production)
  */
@@ -138,13 +143,13 @@ export async function importConfigFromFile(
     // Warn on relative paths and resolve them
     if (!path.isAbsolute(sourcePath)) {
       const resolved = path.resolve(process.cwd(), sourcePath);
-      console.warn('[AionUi] IMPORT_CONFIG_FROM: relative path provided, resolving to:', resolved);
+      console.warn('[WePulse Hermes] IMPORT_CONFIG_FROM: relative path provided, resolving to:', resolved);
       sourcePath = resolved;
     }
 
     const sourceData = decodeConfigFile(sourcePath);
     if (Object.keys(sourceData).length === 0) {
-      console.warn('[AionUi] IMPORT_CONFIG_FROM: file is missing, empty, or corrupted:', sourcePath);
+      console.warn('[WePulse Hermes] IMPORT_CONFIG_FROM: file is missing, empty, or corrupted:', sourcePath);
       return;
     }
 
@@ -169,8 +174,8 @@ export async function importConfigFromFile(
       await configStore.set(key, sourceValue as IConfigStorageRefer[typeof key]);
     }
 
-    console.log('[AionUi] Config imported from:', sourcePath, '(overwrite:', overwrite, ')');
+    console.log('[WePulse Hermes] Config imported from:', sourcePath, '(overwrite:', overwrite, ')');
   } catch (error) {
-    console.warn('[AionUi] IMPORT_CONFIG_FROM failed:', error);
+    console.warn('[WePulse Hermes] IMPORT_CONFIG_FROM failed:', error);
   }
 }

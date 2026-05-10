@@ -26,6 +26,7 @@ import type {
   SetSessionConfigOptionRequest,
 } from '@agentclientprotocol/sdk';
 import { ClientSideConnection, PROTOCOL_VERSION } from '@agentclientprotocol/sdk';
+import { APP_DISPLAY_NAME } from '@/common/config/appBrand';
 import { AgentDisconnectedError, AgentSpawnError, AgentStartupError } from '@process/acp/errors/AcpError';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -137,7 +138,7 @@ export class ProcessAcpClient implements AcpClient {
       const initResult = await Promise.race([
         this.runConnectionRequest(() =>
           this.conn.initialize({
-            clientInfo: { name: 'AionUi', version: '2.0.0' },
+            clientInfo: { name: APP_DISPLAY_NAME, version: '2.0.0' },
             protocolVersion: PROTOCOL_VERSION,
             clientCapabilities: {
               fs: { readTextFile: true, writeTextFile: true },
