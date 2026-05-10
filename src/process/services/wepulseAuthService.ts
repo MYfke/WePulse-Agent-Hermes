@@ -83,6 +83,17 @@ async function readJson(response: Response): Promise<unknown> {
   }
 }
 
+function unwrapSub2apiResponse(payload: unknown): unknown {
+  if (!isRecord(payload) || !('code' in payload) || !('data' in payload)) return payload;
+
+  const code = payload.code;
+  if (code !== 0) {
+    throw new Error(readErrorMessage(payload, 'Sub2api request failed.'));
+  }
+
+  return payload.data;
+}
+
 async function postJson<T>(url: string, body: unknown): Promise<T> {
   const response = await fetch(url, {
     method: 'POST',
@@ -98,7 +109,7 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
     throw new Error(readErrorMessage(payload, `HTTP ${response.status}: ${response.statusText}`));
   }
 
-  return payload as T;
+  return unwrapSub2apiResponse(payload) as T;
 }
 
 function parseLoginEnvelope(payload: LoginEnvelope): {

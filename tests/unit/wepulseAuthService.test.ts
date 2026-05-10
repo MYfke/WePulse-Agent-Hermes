@@ -45,13 +45,17 @@ describe('WePulseAuthService', () => {
           password: 'secret',
         });
         return jsonResponse({
-          account_id: 10,
-          user_id: 20,
-          phone: '13800138000',
-          session_id: 'session',
-          access_token: 'access',
-          refresh_token: 'refresh',
-          expires_in: 1800,
+          code: 0,
+          message: 'success',
+          data: {
+            account_id: 10,
+            user_id: 20,
+            phone: '13800138000',
+            session_id: 'session',
+            access_token: 'access',
+            refresh_token: 'refresh',
+            expires_in: 1800,
+          },
         });
       }
       if (url.endsWith('/v1/models')) {
@@ -106,13 +110,17 @@ describe('WePulseAuthService', () => {
         refresh_token: 'old-refresh',
       });
       return jsonResponse({
-        account_id: 10,
-        user_id: 20,
-        phone: '13800138000',
-        session_id: 'new-session',
-        access_token: 'new-access',
-        refresh_token: 'new-refresh',
-        expires_in: 1800,
+        code: 0,
+        message: 'success',
+        data: {
+          account_id: 10,
+          user_id: 20,
+          phone: '13800138000',
+          session_id: 'new-session',
+          access_token: 'new-access',
+          refresh_token: 'new-refresh',
+          expires_in: 1800,
+        },
       });
     });
     vi.stubGlobal('fetch', fetchMock);
@@ -123,5 +131,24 @@ describe('WePulseAuthService', () => {
     const providers = storageState.data['model.config'] as IProvider[];
     expect(providers[0].apiKey).toBe('new-access');
     expect((storageState.data['wepulse.config'] as WePulseConfig).sessionId).toBe('new-session');
+  });
+
+  it('surfaces Sub2api auth envelope errors before parsing session fields', async () => {
+    const fetchMock = vi.fn(
+      async (): Promise<Response> =>
+        jsonResponse({
+          code: 401,
+          message: 'invalid credentials',
+          data: null,
+        })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(
+      new WePulseAuthService().login({
+        phone: '13800138000',
+        password: 'bad-secret',
+      })
+    ).rejects.toThrow('invalid credentials');
   });
 });
