@@ -50,6 +50,15 @@ function getReleaseSelector() {
   return configured && configured.trim() ? configured.trim() : 'latest';
 }
 
+function getGitHubApiHeaders() {
+  const token = (process.env.GH_TOKEN || process.env.GITHUB_TOKEN || '').trim();
+  const headers = ['Accept: application/vnd.github+json'];
+  if (token) {
+    headers.push(`Authorization: token ${token}`);
+  }
+  return headers;
+}
+
 function getCacheRootDir() {
   const custom = process.env.WEPULSE_HERMES_PYTHON_CACHE_DIR;
   if (custom && custom.trim()) {
@@ -208,16 +217,13 @@ function downloadFile(url, outputPath) {
 }
 
 function readJsonFromUrl(url) {
-  const output = execFileSync(
-    'curl',
-    ['-L', '--fail', '--silent', '--show-error', '-H', 'Accept: application/vnd.github+json', url],
-    {
-      encoding: 'utf-8',
-      maxBuffer: 16 * 1024 * 1024,
-      stdio: ['ignore', 'pipe', 'pipe'],
-      timeout: 120000,
-    }
-  );
+  const headerArgs = getGitHubApiHeaders().flatMap((header) => ['-H', header]);
+  const output = execFileSync('curl', ['-L', '--fail', '--silent', '--show-error', ...headerArgs, url], {
+    encoding: 'utf-8',
+    maxBuffer: 16 * 1024 * 1024,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    timeout: 120000,
+  });
   return JSON.parse(output);
 }
 
