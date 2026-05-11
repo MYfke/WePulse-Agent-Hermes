@@ -14,6 +14,7 @@ const { execSync, spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const yaml = require('js-yaml');
 const prepareBundledBun = require('./prepareBundledBun');
 const prepareBundledPython = require('./prepareBundledPython');
 const prepareAionrs = require('./prepareAionrs');
@@ -215,6 +216,35 @@ function killWindowsProcesses(imageNames) {
 
 function formatExecError(error) {
   return [error?.message, error?.stdout?.toString?.(), error?.stderr?.toString?.()].filter(Boolean).join('\n').trim();
+}
+
+function quoteCliValue(value) {
+  return `"${String(value).replace(/(["\\$`])/g, '\\$1')}"`;
+}
+
+function writeWePulseBuilderConfig(publishUrl) {
+  const projectRoot = path.resolve(__dirname, '..');
+  const baseConfigPath = path.join(projectRoot, 'electron-builder.yml');
+  const generatedConfigPath = path.join(projectRoot, '.electron-builder.wepulse.generated.json');
+  const config = yaml.load(fs.readFileSync(baseConfigPath, 'utf8'));
+
+  config.publish = [
+    {
+      provider: 'generic',
+      url: publishUrl,
+      publishAutoUpdate: true,
+    },
+  ];
+
+  fs.writeFileSync(generatedConfigPath, JSON.stringify(config, null, 2) + '\n', 'utf8');
+  return generatedConfigPath;
+}
+
+function cleanupGeneratedBuilderConfig(configPath) {
+  if (!configPath) return;
+  try {
+    fs.rmSync(configPath, { force: true });
+  } catch {}
 }
 
 // Create DMG using electron-builder --prepackaged with .app path
@@ -548,56 +578,59 @@ try {
   }
 
   const hermesPublishUrl = String(process.env.WEPULSE_HERMES_PUBLISH_URL || '').trim();
-  const publishConfigArgs = hermesPublishUrl
-    ? ` --config.publish.provider=generic --config.publish.url="${hermesPublishUrl.replace(/"/g, '\\"')}"`
-    : '';
+  const generatedBuilderConfigPath = hermesPublishUrl ? writeWePulseBuilderConfig(hermesPublishUrl) : null;
+  const publishConfigArgs = generatedBuilderConfigPath ? ` --config=${quoteCliValue(generatedBuilderConfigPath)}` : '';
   if (hermesPublishUrl) {
     console.log(`🔄 Auto-update feed URL: ${hermesPublishUrl}`);
   }
 
   const builderCommand = `bunx electron-builder ${builderArgs} ${archFlag} ${nsisInclude}${publishConfigArgs} ${publishArg}`;
   try {
-    buildWithDmgRetry(builderCommand, targetArch);
-  } catch (error) {
-    const winExePath = path.join(outDir, 'win-unpacked', 'WePulse-Hermes.exe');
-    const firstError = formatExecError(error);
-    const canRetryWithoutExecutableEdit =
-      process.platform === 'win32' && isWindowsBuild && process.env.CI !== 'true' && fs.existsSync(winExePath);
-
-    if (!canRetryWithoutExecutableEdit) {
-      throw error;
-    }
-
-    console.log('⚠️  Windows local build failed after WePulse-Hermes.exe was produced.');
-    if (firstError) {
-      console.log('   First failure summary:');
-      console.log(
-        firstError
-          .split(/\r?\n/)
-          .slice(0, 6)
-          .map((line) => `   ${line}`)
-          .join('\n')
-      );
-    }
-    console.log('   Retrying local build with win.signAndEditExecutable=false...');
-    console.log('   This fallback is intended for transient rcedit / file-lock failures on developer machines.');
-    killWindowsProcesses(['WePulse-Hermes.exe', 'electron.exe']);
-    cleanupWindowsPackOutput();
-
     try {
-      buildWithDmgRetry(`${builderCommand} --config.win.signAndEditExecutable=false`, targetArch);
-    } catch (retryError) {
-      const retryFailure = formatExecError(retryError);
-      throw new Error(
-        [
-          'Windows local retry with win.signAndEditExecutable=false also failed.',
-          'First failure:',
-          firstError || String(error),
-          'Retry failure:',
-          retryFailure || String(retryError),
-        ].join('\n')
-      );
+      buildWithDmgRetry(builderCommand, targetArch);
+    } catch (error) {
+      const winExePath = path.join(outDir, 'win-unpacked', 'WePulse-Hermes.exe');
+      const firstError = formatExecError(error);
+      const canRetryWithoutExecutableEdit =
+        process.platform === 'win32' && isWindowsBuild && process.env.CI !== 'true' && fs.existsSync(winExePath);
+
+      if (!canRetryWithoutExecutableEdit) {
+        throw error;
+      }
+
+      console.log('⚠️  Windows local build failed after WePulse-Hermes.exe was produced.');
+      if (firstError) {
+        console.log('   First failure summary:');
+        console.log(
+          firstError
+            .split(/\r?\n/)
+            .slice(0, 6)
+            .map((line) => `   ${line}`)
+            .join('\n')
+        );
+      }
+      console.log('   Retrying local build with win.signAndEditExecutable=false...');
+      console.log('   This fallback is intended for transient rcedit / file-lock failures on developer machines.');
+      killWindowsProcesses(['WePulse-Hermes.exe', 'electron.exe']);
+      cleanupWindowsPackOutput();
+
+      try {
+        buildWithDmgRetry(`${builderCommand} --config.win.signAndEditExecutable=false`, targetArch);
+      } catch (retryError) {
+        const retryFailure = formatExecError(retryError);
+        throw new Error(
+          [
+            'Windows local retry with win.signAndEditExecutable=false also failed.',
+            'First failure:',
+            firstError || String(error),
+            'Retry failure:',
+            retryFailure || String(retryError),
+          ].join('\n')
+        );
+      }
     }
+  } finally {
+    cleanupGeneratedBuilderConfig(generatedBuilderConfigPath);
   }
 
   console.log('✅ Build completed!');
