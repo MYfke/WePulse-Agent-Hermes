@@ -59,7 +59,7 @@ type BundledBunManifest = {
   variant?: string;
   version: string;
   generatedAt: string;
-  sourceType: 'cache' | 'download' | 'none';
+  sourceType: 'cache' | 'download' | 'local' | 'none';
   cacheDir: string;
   cacheMeta?: {
     platform: string;
@@ -103,7 +103,7 @@ describe('Packaged bundled bun resources integrity', () => {
       expect(manifest.cacheDir).toBeTruthy();
       expect(Array.isArray(manifest.files)).toBe(true);
       expect(manifest.skipped).not.toBe(true);
-      expect(['cache', 'download']).toContain(manifest.sourceType);
+      expect(['cache', 'download', 'local']).toContain(manifest.sourceType);
 
       if (manifest.variant) {
         expect(['default', 'baseline']).toContain(manifest.variant);
