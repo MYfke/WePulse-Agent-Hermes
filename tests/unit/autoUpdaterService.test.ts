@@ -432,27 +432,15 @@ describe('AutoUpdaterService', () => {
       Object.defineProperty(process, 'arch', { value: originalArch, writable: true });
     });
 
-    it('should return latest-win-arm64 for Windows ARM64', () => {
-      Object.defineProperty(process, 'platform', { value: 'win32', writable: true });
-      Object.defineProperty(process, 'arch', { value: 'arm64', writable: true });
-      expect(getUpdateChannel()).toBe('latest-win-arm64');
-    });
-
     it('should return latest-arm64 for macOS ARM64 (electron-updater appends -mac)', () => {
       Object.defineProperty(process, 'platform', { value: 'darwin', writable: true });
       Object.defineProperty(process, 'arch', { value: 'arm64', writable: true });
       expect(getUpdateChannel()).toBe('latest-arm64');
     });
 
-    it('should return undefined for macOS x64 (default latest-mac.yml)', () => {
+    it('should return undefined for unsupported macOS x64', () => {
       Object.defineProperty(process, 'platform', { value: 'darwin', writable: true });
       Object.defineProperty(process, 'arch', { value: 'x64', writable: true });
-      expect(getUpdateChannel()).toBeUndefined();
-    });
-
-    it('should return undefined for Linux ARM64 (electron-updater appends -linux-arm64)', () => {
-      Object.defineProperty(process, 'platform', { value: 'linux', writable: true });
-      Object.defineProperty(process, 'arch', { value: 'arm64', writable: true });
       expect(getUpdateChannel()).toBeUndefined();
     });
 
@@ -462,7 +450,19 @@ describe('AutoUpdaterService', () => {
       expect(getUpdateChannel()).toBeUndefined();
     });
 
-    it('should return undefined for Linux x64 (default channel)', () => {
+    it('should return undefined for unsupported Windows ARM64', () => {
+      Object.defineProperty(process, 'platform', { value: 'win32', writable: true });
+      Object.defineProperty(process, 'arch', { value: 'arm64', writable: true });
+      expect(getUpdateChannel()).toBeUndefined();
+    });
+
+    it('should return undefined for unsupported Linux ARM64', () => {
+      Object.defineProperty(process, 'platform', { value: 'linux', writable: true });
+      Object.defineProperty(process, 'arch', { value: 'arm64', writable: true });
+      expect(getUpdateChannel()).toBeUndefined();
+    });
+
+    it('should return undefined for unsupported Linux x64', () => {
       Object.defineProperty(process, 'platform', { value: 'linux', writable: true });
       Object.defineProperty(process, 'arch', { value: 'x64', writable: true });
       expect(getUpdateChannel()).toBeUndefined();

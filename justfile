@@ -204,25 +204,10 @@ build-win-x64: preflight
     $env:GYP_MSVS_VERSION = "2022"; \
     node scripts/build-with-builder.js x64 --win --x64
 
-# Build for Windows arm64
-build-win-arm64: preflight
-    Write-Host "Ensuring npm dependencies..."; \
-    if (-not (Test-Path "node_modules")) { npm install } else { npm install --prefer-offline }; \
-    $env:NODE_OPTIONS = "--max-old-space-size=8192"; \
-    $env:npm_config_runtime = "electron"; \
-    $env:npm_config_target = (node -p "require('./package.json').devDependencies.electron.replace(/[\^~]/g, '')" 2>&1).Trim(); \
-    $env:npm_config_arch = "arm64"; \
-    $env:npm_config_target_arch = "arm64"; \
-    $env:npm_config_disturl = "https://electronjs.org/headers"; \
-    $env:npm_config_build_from_source = "true"; \
-    $env:MSVS_VERSION = "2022"; \
-    $env:GYP_MSVS_VERSION = "2022"; \
-    node scripts/build-with-builder.js arm64 --win --arm64
-
-# Build for Windows (auto-detect arch)
+# Build for Windows x64
 build-win: preflight
     Write-Host "Cleaning output directory..."; \
-    Get-Process -Name "AionUI","electron" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue; \
+    Get-Process -Name "WePulse-Hermes","electron" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue; \
     if (Test-Path "out") { Remove-Item -Recurse -Force "out" -ErrorAction SilentlyContinue }; \
     npm install; \
     npm run postinstall; if ($LASTEXITCODE -ne 0) { Write-Host "postinstall failed (continuing)"; $LASTEXITCODE = 0 }; \
@@ -241,17 +226,7 @@ build-mac-arm64: preflight
     $env:npm_config_disturl = "https://electronjs.org/headers"; \
     node scripts/build-with-builder.js arm64 --mac --arm64
 
-# Build for macOS x64
-build-mac-x64: preflight
-    Write-Host "Ensuring npm dependencies..."; \
-    if (-not (Test-Path "node_modules")) { npm install } else { npm install --prefer-offline }; \
-    $env:NODE_OPTIONS = "--max-old-space-size=8192"; \
-    $env:npm_config_runtime = "electron"; \
-    $env:npm_config_target = (node -p "require('./package.json').devDependencies.electron.replace(/[\^~]/g, '')" 2>&1).Trim(); \
-    $env:npm_config_disturl = "https://electronjs.org/headers"; \
-    node scripts/build-with-builder.js x64 --mac --x64
-
-# Build for macOS (arm64 + x64)
+# Build for macOS ARM64
 build-mac: preflight
     Write-Host "Ensuring npm dependencies..."; \
     if (-not (Test-Path "node_modules")) { npm install } else { npm install --prefer-offline }; \
@@ -260,16 +235,6 @@ build-mac: preflight
     $env:npm_config_target = (node -p "require('./package.json').devDependencies.electron.replace(/[\^~]/g, '')" 2>&1).Trim(); \
     $env:npm_config_disturl = "https://electronjs.org/headers"; \
     bun run build-mac
-
-# Build for Linux
-build-linux: preflight
-    Write-Host "Ensuring npm dependencies..."; \
-    if (-not (Test-Path "node_modules")) { npm install } else { npm install --prefer-offline }; \
-    $env:NODE_OPTIONS = "--max-old-space-size=8192"; \
-    $env:npm_config_runtime = "electron"; \
-    $env:npm_config_target = (node -p "require('./package.json').devDependencies.electron.replace(/[\^~]/g, '')" 2>&1).Trim(); \
-    $env:npm_config_disturl = "https://electronjs.org/headers"; \
-    bun run build-deb
 
 # Package only (electron-vite build, no installer)
 package:

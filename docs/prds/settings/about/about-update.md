@@ -204,14 +204,10 @@
 
 **平台 Channel 映射**（electron-updater 根据平台+架构选择对应 yml）：
 
-| 平台 + 架构   | Channel 文件             |
-| ------------- | ------------------------ |
-| macOS arm64   | `latest-arm64-mac.yml`   |
-| macOS x64     | `latest-mac.yml`         |
-| Windows arm64 | `latest-win-arm64.yml`   |
-| Windows x64   | `latest.yml`             |
-| Linux x64     | `latest-linux.yml`       |
-| Linux arm64   | `latest-linux-arm64.yml` |
+| 平台 + 架构 | Channel 文件           |
+| ----------- | ---------------------- |
+| macOS arm64 | `latest-arm64-mac.yml` |
+| Windows x64 | `latest.yml`           |
 
 **异常情况**：
 

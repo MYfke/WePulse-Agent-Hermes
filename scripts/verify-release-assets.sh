@@ -5,7 +5,7 @@ set -euo pipefail
 OUTPUT_DIR="${1:-release-assets}"
 ERRORS=0
 
-for f in latest.yml latest-mac.yml latest-linux.yml latest-linux-arm64.yml; do
+for f in latest.yml latest-arm64-mac.yml; do
   if [ ! -f "$OUTPUT_DIR/$f" ]; then
     echo "FAIL: missing canonical metadata: $f"
     ERRORS=$((ERRORS + 1))
@@ -52,20 +52,9 @@ assert_metadata_points_to_existing_file() {
 }
 
 assert_metadata_points_to_existing_file "latest.yml" "(win-x64|win32-x64|x64)"
-assert_metadata_points_to_existing_file "latest-mac.yml" "(mac-x64|darwin-x64|x64)"
-assert_metadata_points_to_existing_file "latest-linux.yml" "(linux|AppImage|deb)"
-assert_metadata_points_to_existing_file "latest-linux-arm64.yml" "(arm64|aarch64)"
+assert_metadata_points_to_existing_file "latest-arm64-mac.yml" "(mac-arm64|darwin-arm64|arm64)"
 
-for f in latest-win-arm64.yml latest-arm64-mac.yml; do
-  if [ ! -f "$OUTPUT_DIR/$f" ]; then
-    echo "FAIL: missing arch-specific updater metadata: $f"
-    ERRORS=$((ERRORS + 1))
-  else
-    echo "PASS: $f exists"
-  fi
-done
-
-for f in WePulse-Hermes-1.0.0-win-x64.exe WePulse-Hermes-1.0.0-win-arm64.exe WePulse-Hermes-1.0.0-mac-x64.dmg WePulse-Hermes-1.0.0-mac-arm64.dmg WePulse-Hermes-1.0.0-linux-x64.deb WePulse-Hermes-1.0.0-linux-arm64.deb; do
+for f in WePulse-Hermes-1.0.0-win-x64.exe WePulse-Hermes-1.0.0-mac-arm64.dmg WePulse-Hermes-1.0.0-mac-arm64.zip; do
   if [ ! -f "$OUTPUT_DIR/$f" ]; then
     echo "FAIL: missing distributable: $f"
     ERRORS=$((ERRORS + 1))

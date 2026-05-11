@@ -86,14 +86,11 @@ This is the core module that handles all native module rebuilding. It provides:
 ### Building for specific platform
 
 ```bash
-# Build for macOS
+# Build macOS arm64
 npm run dist:mac
 
-# Build for Windows
+# Build Windows x64
 npm run dist:win
-
-# Build for Linux
-npm run dist:linux
 ```
 
 ### Manual native module rebuild
