@@ -23,6 +23,14 @@ on:
         description: 'Only upload primary installers (exe/msi/dmg/deb), skip zip/yml/blockmap'
         type: boolean
         default: false
+      publish_url:
+        description: 'Generic electron-updater feed URL embedded into packaged builds'
+        type: string
+        default: ''
+      release_version:
+        description: 'Semver version injected into package.json before packaging'
+        type: string
+        default: ''
 
 env:
   BUN_INSTALL_REGISTRY: 'https://registry.npmjs.org/'
@@ -75,6 +83,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: code-quality
     if: ${{ always() && (inputs.skip_code_quality || needs.code-quality.result == 'success') }}
+    env:
+      WEPULSE_HERMES_PUBLISH_URL: ${{ inputs.publish_url }}
 
     outputs:
       commit-short: ${{ steps.commit.outputs.short }}
@@ -194,6 +204,26 @@ jobs:
           echo "Ref: ${{ inputs.ref || '(default)' }}"
           echo "Commit: ${{ steps.commit.outputs.short }}"
           echo "=========================================="
+
+      - name: Apply WePulse release version
+        if: inputs.release_version != ''
+        shell: bash
+        env:
+          WEPULSE_HERMES_RELEASE_VERSION: ${{ inputs.release_version }}
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs = require('fs');
+          const version = String(process.env.WEPULSE_HERMES_RELEASE_VERSION || '').trim();
+          if (!/^\d+\.\d+\.\d+$/.test(version)) {
+            throw new Error(`Invalid WEPULSE_HERMES_RELEASE_VERSION: ${version}`);
+          }
+          const packagePath = 'package.json';
+          const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+          packageJson.version = version;
+          fs.writeFileSync(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`);
+          console.log(`WePulse Hermes release version: ${version}`);
+          NODE
 
       # macOS code signing certificate installation
       - name: Setup macOS code signing (macOS only)
@@ -568,8 +598,7 @@ jobs:
             out/*.msi
             out/*.dmg
             out/*.deb
-            out/AionUi-*-win32-*.zip
-            out/AionUi-*-mac-*.zip
+            out/*.zip
             out/*.yml
           if-no-files-found: warn
           retention-days: 7

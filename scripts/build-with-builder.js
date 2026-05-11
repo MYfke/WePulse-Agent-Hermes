@@ -547,7 +547,15 @@ try {
     cleanupWindowsPackOutput();
   }
 
-  const builderCommand = `bunx electron-builder ${builderArgs} ${archFlag} ${nsisInclude} ${publishArg}`;
+  const hermesPublishUrl = String(process.env.WEPULSE_HERMES_PUBLISH_URL || '').trim();
+  const publishConfigArgs = hermesPublishUrl
+    ? ` --config.publish.provider=generic --config.publish.url="${hermesPublishUrl.replace(/"/g, '\\"')}"`
+    : '';
+  if (hermesPublishUrl) {
+    console.log(`🔄 Auto-update feed URL: ${hermesPublishUrl}`);
+  }
+
+  const builderCommand = `bunx electron-builder ${builderArgs} ${archFlag} ${nsisInclude}${publishConfigArgs} ${publishArg}`;
   try {
     buildWithDmgRetry(builderCommand, targetArch);
   } catch (error) {

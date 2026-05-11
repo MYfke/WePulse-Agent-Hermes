@@ -16,8 +16,96 @@ env:
   BUN_INSTALL_REGISTRY: 'https://registry.npmjs.org/'
 
 jobs:
+  resolve-publish-config:
+    name: Resolve WePulse publish config
+    runs-on: ubuntu-latest
+    outputs:
+      target_env: ${{ steps.resolve.outputs.target_env }}
+      website_base_url: ${{ steps.resolve.outputs.website_base_url }}
+      oss_prefix: ${{ steps.resolve.outputs.oss_prefix }}
+      publish_url: ${{ steps.resolve.outputs.publish_url }}
+      release_version: ${{ steps.resolve.outputs.release_version }}
+      tag_name: ${{ steps.resolve.outputs.tag_name }}
+      is_dev: ${{ steps.resolve.outputs.is_dev }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Fetch tags
+        run: git fetch --tags --force
+
+      - name: Resolve publish config
+        id: resolve
+        shell: bash
+        run: |
+          set -euo pipefail
+          package_version="$(node -p "require('./package.json').version")"
+          if [[ ! "$package_version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "::error::Invalid package.json version: $package_version"
+            exit 1
+          fi
+          major="${BASH_REMATCH[1]}"
+          minor="${BASH_REMATCH[2]}"
+          patch="${BASH_REMATCH[3]}"
+
+          if [[ "$GITHUB_REF" == "refs/heads/dev" ]]; then
+            target_env="dev"
+            website_base_url="https://www-dev.wepulse.cn"
+            oss_prefix="hermes/dev"
+            is_dev="true"
+            latest_patch="$patch"
+            while IFS= read -r tag; do
+              if [[ "$tag" =~ ^v${major}\.${minor}\.([0-9]+)(-dev-[0-9a-f]+)?$ ]]; then
+                tag_patch="${BASH_REMATCH[1]}"
+                if [ "$tag_patch" -gt "$latest_patch" ]; then
+                  latest_patch="$tag_patch"
+                fi
+              fi
+            done < <(git tag --list "v${major}.${minor}.*")
+            release_version="${major}.${minor}.$((latest_patch + 1))"
+            commit_short="$(git rev-parse --short HEAD)"
+            tag_name="v${release_version}-dev-${commit_short}"
+          elif [[ "$GITHUB_REF" == refs/tags/* && "$GITHUB_REF" == *-dev-* ]]; then
+            target_env="dev"
+            website_base_url="https://www-dev.wepulse.cn"
+            oss_prefix="hermes/dev"
+            is_dev="true"
+            tag_name="${GITHUB_REF#refs/tags/}"
+            if [[ ! "$tag_name" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+)-dev-[0-9a-f]+$ ]]; then
+              echo "::error::Development release tag must be vX.Y.Z-dev-SHA: $tag_name"
+              exit 1
+            fi
+            release_version="${BASH_REMATCH[1]}"
+          elif [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            target_env="prod"
+            website_base_url="https://wepulse.cn"
+            oss_prefix="hermes/prod"
+            is_dev="false"
+            tag_name="${GITHUB_REF#refs/tags/}"
+            if [[ ! "$tag_name" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+              echo "::error::Production release tag must be vX.Y.Z or X.Y.Z: $tag_name"
+              exit 1
+            fi
+            release_version="${BASH_REMATCH[1]}"
+          else
+            echo "::error::Unsupported ref for Hermes publishing: $GITHUB_REF"
+            exit 1
+          fi
+
+          publish_url="${website_base_url%/}/${oss_prefix#/}"
+          echo "target_env=$target_env" >> "$GITHUB_OUTPUT"
+          echo "website_base_url=$website_base_url" >> "$GITHUB_OUTPUT"
+          echo "oss_prefix=$oss_prefix" >> "$GITHUB_OUTPUT"
+          echo "publish_url=$publish_url" >> "$GITHUB_OUTPUT"
+          echo "release_version=$release_version" >> "$GITHUB_OUTPUT"
+          echo "tag_name=$tag_name" >> "$GITHUB_OUTPUT"
+          echo "is_dev=$is_dev" >> "$GITHUB_OUTPUT"
+
   build-pipeline:
     name: Build Pipeline
+    needs: resolve-publish-config
     uses: ./.github/workflows/_build-reusable.yml
     # dev 分支或正式 tag 触发构建（排除 -dev- tag，避免重复构建）
     if: github.ref == 'refs/heads/dev' || (startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-dev-'))
@@ -31,6 +119,8 @@ jobs:
           {"platform":"linux-x64","os":"ubuntu-latest","command":"node scripts/build-with-builder.js x64 --linux --x64","artifact-name":"linux-build-x64","arch":"x64"},
           {"platform":"linux-arm64","os":"ubuntu-latest","command":"node scripts/build-with-builder.js arm64 --linux --arm64","artifact-name":"linux-build-arm64","arch":"arm64"}
         ]}
+      publish_url: ${{ needs.resolve-publish-config.outputs.publish_url }}
+      release_version: ${{ needs.resolve-publish-config.outputs.release_version }}
     secrets: inherit
 
   # 自动重试 workflow（当构建失败时）
@@ -93,7 +183,7 @@ jobs:
   create-tag:
     name: Create Tag from Branch
     runs-on: ubuntu-latest
-    needs: [build-pipeline]
+    needs: [resolve-publish-config, build-pipeline]
     if: success() && github.ref == 'refs/heads/dev'
     outputs:
       tag_name: ${{ steps.create_tag.outputs.tag_name }}
@@ -118,68 +208,16 @@ jobs:
       - name: Create and push tag
         id: create_tag
         run: |
-          VERSION=$(node -p "require('./package.json').version")
-          COMMIT_SHORT=$(git rev-parse --short HEAD)
-          BRANCH_NAME=${GITHUB_REF#refs/heads/}
-
-          # 根据分支确定 tag 格式
-          if [ "$BRANCH_NAME" = "dev" ]; then
-            TAG_NAME="v${VERSION}-dev-${COMMIT_SHORT}"
-            IS_DEV="true"
-            echo "🔧 Development release: $TAG_NAME"
-          else
-            TAG_NAME="v$VERSION"
-            IS_DEV="false"
-            echo "🚀 Production release: $TAG_NAME"
-          fi
+          TAG_NAME="${{ needs.resolve-publish-config.outputs.tag_name }}"
+          IS_DEV="${{ needs.resolve-publish-config.outputs.is_dev }}"
 
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
           echo "is_dev=$IS_DEV" >> $GITHUB_OUTPUT
 
           # 检查远程tag是否已存在
           if git ls-remote --tags origin | grep -q "refs/tags/$TAG_NAME$"; then
-            if [ "$IS_DEV" = "false" ]; then
-              # Main 分支：需要递增版本并修改 package.json
-              echo "⚠️ Tag $TAG_NAME already exists, auto-incrementing version..."
-
-              if [[ $VERSION =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-                MAJOR=${BASH_REMATCH[1]}
-                MINOR=${BASH_REMATCH[2]}
-                PATCH=${BASH_REMATCH[3]}
-                NEW_PATCH=$((PATCH + 1))
-                NEW_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}"
-
-                echo "📝 Updating package.json version to $NEW_VERSION"
-
-                # 更新 package.json 版本号
-                bun pm version $NEW_VERSION
-
-                # 配置git用户信息
-                git config user.name "github-actions[bot]"
-                git config user.email "github-actions[bot]@users.noreply.github.com"
-
-                # 提交版本更新
-                git add package.json bun.lock
-                git commit -m "chore: bump version to $NEW_VERSION"
-                git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git
-                git push origin $BRANCH_NAME
-
-                # 获取新的 commit ID
-                COMMIT_SHORT=$(git rev-parse --short HEAD)
-                TAG_NAME="v${NEW_VERSION}-${COMMIT_SHORT}"
-
-                echo "🚀 New tag with updated version: $TAG_NAME"
-                echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
-              else
-                TAG_NAME="v${VERSION}-${COMMIT_SHORT}"
-                echo "⚠️ Fallback: creating tag with commit ID: $TAG_NAME"
-                echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
-              fi
-            else
-              # Dev 分支 tag 已存在则失败（不应该发生）
-              echo "⚠️ Dev tag $TAG_NAME already exists, this shouldn't happen"
-              exit 1
-            fi
+            echo "⚠️ Tag $TAG_NAME already exists, this shouldn't happen"
+            exit 1
           fi
 
           # 配置git用户信息（如果前面没配置）
@@ -254,3 +292,158 @@ jobs:
           prerelease: ${{ steps.version.outputs.is_dev == 'true' || contains(steps.version.outputs.tag_name, 'beta') || contains(steps.version.outputs.tag_name, 'alpha') || contains(steps.version.outputs.tag_name, 'rc') }}
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+  publish-oss:
+    name: Publish to WePulse OSS
+    runs-on: ubuntu-latest
+    needs: [resolve-publish-config, build-pipeline, create-tag]
+    if: >-
+      always() &&
+      needs.build-pipeline.result == 'success' &&
+      (needs.create-tag.result == 'success' || (startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-dev-')))
+    env:
+      OSSUTIL_VERSION: '1.7.19'
+      TARGET_ENV: ${{ needs.resolve-publish-config.outputs.target_env }}
+      WEBSITE_BASE_URL: ${{ needs.resolve-publish-config.outputs.website_base_url }}
+      OSS_PREFIX: ${{ needs.resolve-publish-config.outputs.oss_prefix }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v7
+        with:
+          path: build-artifacts
+
+      - name: Prepare release assets
+        shell: bash
+        run: bash scripts/prepare-release-assets.sh build-artifacts release-assets
+
+      - name: Write update control config
+        shell: bash
+        run: |
+          set -euo pipefail
+          feed_url="${WEBSITE_BASE_URL%/}/${OSS_PREFIX#/}/"
+          cat > release-assets/update-config.json <<EOF
+          {
+            "enabled": true,
+            "checkOnStart": true,
+            "autoDownload": false,
+            "installOnDownload": false,
+            "feedUrl": "${feed_url}"
+          }
+          EOF
+
+      - name: Create stable download aliases
+        shell: bash
+        env:
+          WEPULSE_HERMES_RELEASE_VERSION: ${{ needs.resolve-publish-config.outputs.release_version }}
+        run: |
+          set -euo pipefail
+          windows_installer="$(find release-assets -maxdepth 1 -type f -name 'WePulse-Hermes-*-win-x64.exe' | sort | head -n 1)"
+          mac_installer="$(find release-assets -maxdepth 1 -type f -name 'WePulse-Hermes-*-mac-arm64.dmg' | sort | head -n 1)"
+          if [ -z "$windows_installer" ]; then
+            windows_installer="$(find release-assets -maxdepth 1 -type f -name 'WePulse-Hermes-*-win-*.exe' | sort | head -n 1)"
+          fi
+          if [ -z "$mac_installer" ]; then
+            mac_installer="$(find release-assets -maxdepth 1 -type f -name 'WePulse-Hermes-*-mac-*.dmg' | sort | head -n 1)"
+          fi
+          test -n "$windows_installer"
+          test -n "$mac_installer"
+
+          windows_file_name="$(basename "$windows_installer")"
+          mac_file_name="$(basename "$mac_installer")"
+          cp "$windows_installer" release-assets/WePulse-Hermes-Setup.exe
+          cp "$mac_installer" release-assets/WePulse-Hermes.dmg
+
+          cat > release-assets/download-manifest.json <<EOF
+          {
+            "version": "${WEPULSE_HERMES_RELEASE_VERSION}",
+            "windows": {
+              "fileName": "${windows_file_name}"
+            },
+            "macos": {
+              "fileName": "${mac_file_name}"
+            }
+          }
+          EOF
+
+      - name: Resolve OSS credentials
+        shell: bash
+        env:
+          DEV_OSS_ENDPOINT: ${{ secrets.OSS_ENDPOINT_DEV }}
+          DEV_OSS_BUCKET: ${{ secrets.OSS_BUCKET_DEV }}
+          DEV_OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID_DEV }}
+          DEV_OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET_DEV }}
+          PROD_OSS_ENDPOINT: ${{ secrets.OSS_ENDPOINT }}
+          PROD_OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
+          PROD_OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          PROD_OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ "$TARGET_ENV" = "dev" ]; then
+            {
+              echo "OSS_ENDPOINT=$DEV_OSS_ENDPOINT"
+              echo "OSS_BUCKET=$DEV_OSS_BUCKET"
+              echo "OSS_ACCESS_KEY_ID=$DEV_OSS_ACCESS_KEY_ID"
+              echo "OSS_ACCESS_KEY_SECRET=$DEV_OSS_ACCESS_KEY_SECRET"
+            } >> "$GITHUB_ENV"
+          else
+            {
+              echo "OSS_ENDPOINT=$PROD_OSS_ENDPOINT"
+              echo "OSS_BUCKET=$PROD_OSS_BUCKET"
+              echo "OSS_ACCESS_KEY_ID=$PROD_OSS_ACCESS_KEY_ID"
+              echo "OSS_ACCESS_KEY_SECRET=$PROD_OSS_ACCESS_KEY_SECRET"
+            } >> "$GITHUB_ENV"
+          fi
+
+      - name: Validate publish inputs
+        run: |
+          set -euo pipefail
+          test -n "$OSS_ENDPOINT"
+          test -n "$OSS_BUCKET"
+          test -n "$OSS_ACCESS_KEY_ID"
+          test -n "$OSS_ACCESS_KEY_SECRET"
+
+      - name: Install ossutil
+        run: |
+          curl -L --fail -o ossutil.zip \
+            "https://gosspublic.alicdn.com/ossutil/${OSSUTIL_VERSION}/ossutil-v${OSSUTIL_VERSION}-linux-amd64.zip"
+          unzip -q ossutil.zip -d ossutil-bin
+          OSSUTIL_BIN="$(find ossutil-bin -type f \( -name 'ossutil64' -o -name 'ossutil' \) | head -n 1)"
+          test -n "$OSSUTIL_BIN"
+          chmod +x "$OSSUTIL_BIN"
+          cp "$OSSUTIL_BIN" ./ossutil
+
+      - name: Configure ossutil
+        run: |
+          ./ossutil config \
+            -e "$OSS_ENDPOINT" \
+            -i "$OSS_ACCESS_KEY_ID" \
+            -k "$OSS_ACCESS_KEY_SECRET" \
+            -c .ossutilconfig
+
+      - name: Upload release files to OSS
+        run: |
+          set -euo pipefail
+          prefix="${OSS_PREFIX#/}"
+          prefix="${prefix%/}"
+          ./ossutil --config-file .ossutilconfig \
+            cp -rf release-assets/. "oss://$OSS_BUCKET/$prefix/"
+
+      - name: Refresh manifest cache headers
+        run: |
+          set -euo pipefail
+          prefix="${OSS_PREFIX#/}"
+          prefix="${prefix%/}"
+          for file in update-config.json download-manifest.json latest.yml latest-mac.yml latest-win-arm64.yml latest-arm64-mac.yml WePulse-Hermes-Setup.exe WePulse-Hermes.dmg; do
+            if [ -f "release-assets/$file" ]; then
+              ./ossutil --config-file .ossutilconfig \
+                cp -f "release-assets/$file" "oss://$OSS_BUCKET/$prefix/$file" \
+                --meta "Cache-Control:no-cache,no-store,must-revalidate"
+            fi
+          done
+
+      - name: Publish summary
+        run: |
+          echo "Published Hermes $TARGET_ENV installers to ${WEBSITE_BASE_URL%/}/${OSS_PREFIX#/}/"

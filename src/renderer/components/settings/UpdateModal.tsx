@@ -17,6 +17,7 @@ import { useTranslation } from 'react-i18next';
 type UpdateStatus = 'checking' | 'upToDate' | 'available' | 'downloading' | 'downloaded' | 'success' | 'error';
 
 type UpdateInfo = UpdateReleaseInfo;
+type UpdateCheckInvokeResult = Awaited<ReturnType<typeof ipcBridge.update.check.invoke>>;
 
 const UpdateModal: React.FC = () => {
   const { t } = useTranslation();
@@ -77,36 +78,47 @@ const UpdateModal: React.FC = () => {
       }
       setAutoUpdateAvailable(autoUpdateOk);
 
-      // Always run manual check for version info and release notes
-      const res = await ipcBridge.update.check.invoke({ includePrerelease });
-      if (!res?.success) {
-        throw new Error(res?.msg || t('update.checkFailed'));
+      // Use GitHub release data only as enrichment. The packaged updater feed
+      // is the primary path, so blocked GitHub access must not break OSS updates.
+      let manualCheckResult: UpdateCheckInvokeResult | null = null;
+      let manualCheckError = '';
+      try {
+        manualCheckResult = await ipcBridge.update.check.invoke({ includePrerelease });
+        if (!manualCheckResult?.success) {
+          throw new Error(manualCheckResult?.msg || t('update.checkFailed'));
+        }
+        setCurrentVersion(manualCheckResult.data?.currentVersion || '');
+      } catch (err: unknown) {
+        manualCheckError = err instanceof Error ? err.message : String(err);
+        console.warn('Manual GitHub update check failed:', manualCheckError);
       }
-      setCurrentVersion(res.data?.currentVersion || '');
 
       if (autoUpdateOk) {
-        // Auto-update available — use manual check data for display only
-        if (res.data?.latest) {
-          setUpdateInfo(res.data.latest);
-          setReleasePageUrl(res.data.latest.htmlUrl || '');
+        if (manualCheckResult?.data?.latest) {
+          setUpdateInfo(manualCheckResult.data.latest);
+          setReleasePageUrl(manualCheckResult.data.latest.htmlUrl || '');
         }
         setStatus('available');
         return;
       }
 
+      if (!manualCheckResult?.success) {
+        throw new Error(manualCheckError || t('update.checkFailed'));
+      }
+
       // Manual mode
-      if (res.data?.updateAvailable && res.data.latest) {
-        setUpdateInfo(res.data.latest);
-        setReleasePageUrl(res.data.latest.htmlUrl || '');
-        if (!res.data.latest.recommendedAsset) {
+      if (manualCheckResult.data?.updateAvailable && manualCheckResult.data.latest) {
+        setUpdateInfo(manualCheckResult.data.latest);
+        setReleasePageUrl(manualCheckResult.data.latest.htmlUrl || '');
+        if (!manualCheckResult.data.latest.recommendedAsset) {
           setErrorMsg(t('update.noCompatibleAssetManual'));
         }
         setStatus('available');
         return;
       }
 
-      setUpdateInfo(res.data?.latest || null);
-      setReleasePageUrl(res.data?.latest?.htmlUrl || '');
+      setUpdateInfo(manualCheckResult.data?.latest || null);
+      setReleasePageUrl(manualCheckResult.data?.latest?.htmlUrl || '');
       setStatus('upToDate');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -326,7 +338,7 @@ const UpdateModal: React.FC = () => {
                 <div>
                   <div className='text-15px font-600 text-t-primary'>{t('update.availableTitle')}</div>
                   <div className='text-12px text-t-tertiary mt-2px'>
-                    {currentVersion} →{' '}
+                    {currentVersion || '-'} →{' '}
                     <span className='text-[rgb(var(--primary-6))] font-500'>
                       {updateInfo?.version || autoUpdateInfo?.version}
                     </span>

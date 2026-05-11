@@ -23,7 +23,10 @@ mkdir -p "$OUTPUT_DIR"
 # 1) Copy all distributables (unique file names)
 # ---------------------------------------------------------------------------
 echo "==> Copying distributables from $ARTIFACTS_DIR ..."
-mapfile -t DISTRIBUTABLES < <(find "$ARTIFACTS_DIR" -type f \( \
+DISTRIBUTABLES=()
+while IFS= read -r file; do
+  DISTRIBUTABLES+=("$file")
+done < <(find "$ARTIFACTS_DIR" -type f \( \
   -name "*.exe" -o \
   -name "*.msi" -o \
   -name "*.dmg" -o \
