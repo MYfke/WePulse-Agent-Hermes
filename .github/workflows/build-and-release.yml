@@ -295,6 +295,7 @@ jobs:
       always() &&
       needs.build-pipeline.result == 'success' &&
       (needs.create-tag.result == 'success' || (startsWith(github.ref, 'refs/tags/') && !contains(github.ref, '-dev-')))
+    environment: ${{ needs.create-tag.outputs.is_dev == 'true' && 'dev-release' || 'release' }}
     env:
       OSSUTIL_VERSION: '1.7.19'
       TARGET_ENV: ${{ needs.resolve-publish-config.outputs.target_env }}
