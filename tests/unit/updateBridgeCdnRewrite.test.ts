@@ -161,7 +161,9 @@ describe('updateBridge GitHub release URL mapping', () => {
       const handler = await getCheckHandler();
       const result = await handler({ repo: 'MYfke/WePulse-Agent-Hermes' });
       const asset = result.data?.latest?.assets?.[0];
-      expect(asset?.url).toMatch(/^https:\/\/github\.com\/MYfke\/WePulse-Agent-Hermes\/releases\/download\/v1\.9\.22\//);
+      expect(asset?.url).toMatch(
+        /^https:\/\/github\.com\/MYfke\/WePulse-Agent-Hermes\/releases\/download\/v1\.9\.22\//
+      );
     } finally {
       vi.unstubAllGlobals();
     }
