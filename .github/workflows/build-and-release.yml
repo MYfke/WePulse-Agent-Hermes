@@ -335,15 +335,15 @@ jobs:
           WEPULSE_HERMES_RELEASE_VERSION: ${{ needs.resolve-publish-config.outputs.release_version }}
         run: |
           set -euo pipefail
-          windows_installer="$(find release-assets -maxdepth 1 -type f -name 'WePulse-Hermes-*-win-x64.exe' | sort | head -n 1)"
-          mac_installer="$(find release-assets -maxdepth 1 -type f -name 'WePulse-Hermes-*-mac-arm64.dmg' | sort | head -n 1)"
+          windows_installer="$(find release-assets -maxdepth 1 -type f -name 'WePulse-Agent-Hermes-*-win-x64.exe' | sort | head -n 1)"
+          mac_installer="$(find release-assets -maxdepth 1 -type f -name 'WePulse-Agent-Hermes-*-mac-arm64.dmg' | sort | head -n 1)"
           test -n "$windows_installer"
           test -n "$mac_installer"
 
           windows_file_name="$(basename "$windows_installer")"
           mac_file_name="$(basename "$mac_installer")"
-          cp "$windows_installer" release-assets/WePulse-Hermes-Setup.exe
-          cp "$mac_installer" release-assets/WePulse-Hermes.dmg
+          cp "$windows_installer" release-assets/WePulse-Agent-Hermes-Setup.exe
+          cp "$mac_installer" release-assets/WePulse-Agent-Hermes.dmg
 
           cat > release-assets/download-manifest.json <<EOF
           {
@@ -425,7 +425,7 @@ jobs:
           set -euo pipefail
           prefix="${OSS_PREFIX#/}"
           prefix="${prefix%/}"
-          for file in update-config.json download-manifest.json latest.yml latest-arm64-mac.yml WePulse-Hermes-Setup.exe WePulse-Hermes.dmg; do
+          for file in update-config.json download-manifest.json latest.yml latest-arm64-mac.yml WePulse-Agent-Hermes-Setup.exe WePulse-Agent-Hermes.dmg; do
             if [ -f "release-assets/$file" ]; then
               ./ossutil --config-file .ossutilconfig \
                 cp -f "release-assets/$file" "oss://$OSS_BUCKET/$prefix/$file" \
