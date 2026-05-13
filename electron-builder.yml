@@ -1,6 +1,6 @@
 appId: com.wepulse.hermes
 productName: WePulse Hermes
-executableName: WePulse-Hermes
+executableName: WePulse-Agent-Hermes
 copyright: Copyright © 2026 WePulse
 
 protocols:
@@ -122,7 +122,7 @@ win:
     #    - msi
     - zip
   icon: resources/app.ico # Use the checked-in Windows icon resource for executable metadata/icon patching
-  artifactName: WePulse-Hermes-${version}-${os}-${arch}.${ext}
+  artifactName: WePulse-Agent-Hermes-${version}-${os}-${arch}.${ext}
 
 nsis:
   oneClick: false
@@ -131,7 +131,7 @@ nsis:
   createStartMenuShortcut: true
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
-  artifactName: WePulse-Hermes-${version}-${os}-${arch}.${ext}
+  artifactName: WePulse-Agent-Hermes-${version}-${os}-${arch}.${ext}
   differentialPackage: false
 
 mac:
@@ -139,7 +139,7 @@ mac:
     - dmg
     - zip
   icon: resources/app.icns
-  artifactName: WePulse-Hermes-${version}-${os}-${arch}.${ext}
+  artifactName: WePulse-Agent-Hermes-${version}-${os}-${arch}.${ext}
   category: public.app-category.productivity
   hardenedRuntime: true
   gatekeeperAssess: false
@@ -172,7 +172,7 @@ linux:
   target:
     - deb
   icon: resources/app.png
-  artifactName: WePulse-Hermes-${version}-${os}-${arch}.${ext}
+  artifactName: WePulse-Agent-Hermes-${version}-${os}-${arch}.${ext}
   category: Utility
   maintainer: wepulse
   vendor: wepulse
@@ -227,6 +227,6 @@ electronDownload:
 publish:
   provider: github
   owner: MYfke
-  repo: WePulse-Hermes
+  repo: WePulse-Agent-Hermes
   publishAutoUpdate: true
   releaseType: release

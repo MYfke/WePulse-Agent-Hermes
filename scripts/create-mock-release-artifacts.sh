@@ -9,28 +9,28 @@ mkdir -p "$ARTIFACTS_DIR/windows-build-x64"
 mkdir -p "$ARTIFACTS_DIR/macos-build-arm64"
 
 # Windows x64
-touch "$ARTIFACTS_DIR/windows-build-x64/WePulse-Hermes-1.0.0-win-x64.exe"
+touch "$ARTIFACTS_DIR/windows-build-x64/WePulse-Agent-Hermes-1.0.0-win-x64.exe"
 cat > "$ARTIFACTS_DIR/windows-build-x64/latest.yml" <<'EOF'
 version: 1.0.0
 files:
-  - url: WePulse-Hermes-1.0.0-win-x64.exe
+  - url: WePulse-Agent-Hermes-1.0.0-win-x64.exe
     sha512: fake-sha512-x64
     size: 100000
-path: WePulse-Hermes-1.0.0-win-x64.exe
+path: WePulse-Agent-Hermes-1.0.0-win-x64.exe
 sha512: fake-sha512-x64
 releaseDate: '2025-01-01'
 EOF
 
 # macOS arm64
-touch "$ARTIFACTS_DIR/macos-build-arm64/WePulse-Hermes-1.0.0-mac-arm64.dmg"
-touch "$ARTIFACTS_DIR/macos-build-arm64/WePulse-Hermes-1.0.0-mac-arm64.zip"
+touch "$ARTIFACTS_DIR/macos-build-arm64/WePulse-Agent-Hermes-1.0.0-mac-arm64.dmg"
+touch "$ARTIFACTS_DIR/macos-build-arm64/WePulse-Agent-Hermes-1.0.0-mac-arm64.zip"
 cat > "$ARTIFACTS_DIR/macos-build-arm64/latest-mac.yml" <<'EOF'
 version: 1.0.0
 files:
-  - url: WePulse-Hermes-1.0.0-mac-arm64.zip
+  - url: WePulse-Agent-Hermes-1.0.0-mac-arm64.zip
     sha512: fake-sha512-mac-arm64
     size: 200000
-path: WePulse-Hermes-1.0.0-mac-arm64.zip
+path: WePulse-Agent-Hermes-1.0.0-mac-arm64.zip
 sha512: fake-sha512-mac-arm64
 releaseDate: '2025-01-01'
 EOF

@@ -5,7 +5,7 @@
  *
  * Two modes:
  *   1. **Packaged mode** (CI default): Launches from electron-builder's unpacked output
- *      (e.g. out/linux-unpacked/wepulse-hermes, out/mac-arm64/WePulse-Hermes.app, out/win-unpacked/WePulse-Hermes.exe).
+ *      (e.g. out/linux-unpacked/wepulse-hermes, out/mac-arm64/WePulse-Agent-Hermes.app, out/win-unpacked/WePulse-Agent-Hermes.exe).
  *      This validates that packaged resources are intact.
  *   2. **Dev mode** (local default): Launches via `electron .` from project root with
  *      the Vite dev server (electron-vite dev).
@@ -64,19 +64,19 @@ function resolvePackagedApp(): { executablePath: string; cwd: string } | null {
   const platform = process.platform;
 
   if (platform === 'win32') {
-    // out/win-unpacked/WePulse-Hermes.exe  or  out/win-x64-unpacked/WePulse-Hermes.exe
+    // out/win-unpacked/WePulse-Agent-Hermes.exe  or  out/win-x64-unpacked/WePulse-Agent-Hermes.exe
     for (const dir of ['win-unpacked', 'win-x64-unpacked', 'win-arm64-unpacked']) {
-      const exe = path.join(outDir, dir, 'WePulse-Hermes.exe');
+      const exe = path.join(outDir, dir, 'WePulse-Agent-Hermes.exe');
       if (fs.existsSync(exe)) return { executablePath: exe, cwd: path.join(outDir, dir) };
     }
   } else if (platform === 'darwin') {
-    // out/mac-arm64/WePulse-Hermes.app/Contents/MacOS/WePulse-Hermes  or  out/mac/WePulse-Hermes.app/...
+    // out/mac-arm64/WePulse-Agent-Hermes.app/Contents/MacOS/WePulse-Agent-Hermes  or  out/mac/WePulse-Agent-Hermes.app/...
     for (const dir of ['mac-arm64', 'mac-x64', 'mac', 'mac-universal']) {
       const macDir = path.join(outDir, dir);
       if (!fs.existsSync(macDir)) continue;
       const appBundle = fs.readdirSync(macDir).find((f) => f.endsWith('.app'));
       if (appBundle) {
-        const exe = path.join(macDir, appBundle, 'Contents', 'MacOS', 'WePulse-Hermes');
+        const exe = path.join(macDir, appBundle, 'Contents', 'MacOS', 'WePulse-Agent-Hermes');
         if (fs.existsSync(exe)) return { executablePath: exe, cwd: macDir };
       }
     }
@@ -86,7 +86,7 @@ function resolvePackagedApp(): { executablePath: string; cwd: string } | null {
       const dirPath = path.join(outDir, dir);
       if (!fs.existsSync(dirPath)) continue;
       // Try common executable names
-      for (const name of ['wepulse-hermes', 'WePulse-Hermes']) {
+      for (const name of ['wepulse-hermes', 'WePulse-Agent-Hermes']) {
         const exe = path.join(dirPath, name);
         if (fs.existsSync(exe)) return { executablePath: exe, cwd: dirPath };
       }

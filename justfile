@@ -207,7 +207,7 @@ build-win-x64: preflight
 # Build for Windows x64
 build-win: preflight
     Write-Host "Cleaning output directory..."; \
-    Get-Process -Name "WePulse-Hermes","electron" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue; \
+    Get-Process -Name "WePulse-Agent-Hermes","electron" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue; \
     if (Test-Path "out") { Remove-Item -Recurse -Force "out" -ErrorAction SilentlyContinue }; \
     npm install; \
     npm run postinstall; if ($LASTEXITCODE -ne 0) { Write-Host "postinstall failed (continuing)"; $LASTEXITCODE = 0 }; \

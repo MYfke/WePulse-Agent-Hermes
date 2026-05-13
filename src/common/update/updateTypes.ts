@@ -35,7 +35,7 @@ export interface UpdateCheckResult {
 
 export interface UpdateCheckRequest {
   includePrerelease?: boolean;
-  /** Defaults to MYfke/WePulse-Hermes when omitted */
+  /** Defaults to MYfke/WePulse-Agent-Hermes when omitted */
   repo?: string;
 }
 

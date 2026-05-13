@@ -95,10 +95,10 @@ export async function resetPasswordCLI(username: string): Promise<void> {
       log.error('Database is not initialized yet');
       log.info('');
       log.info('Please run WePulse Hermes at least once to initialize the database:');
-      log.info('  WePulse-Hermes --webui');
+      log.info('  WePulse-Agent-Hermes --webui');
       log.info('');
       log.info('Then you can reset the password using:');
-      log.info('  WePulse-Hermes --resetpass <username>');
+      log.info('  WePulse-Agent-Hermes --resetpass <username>');
       process.exit(1);
     }
 

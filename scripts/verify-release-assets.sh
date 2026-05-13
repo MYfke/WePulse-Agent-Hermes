@@ -54,7 +54,7 @@ assert_metadata_points_to_existing_file() {
 assert_metadata_points_to_existing_file "latest.yml" "(win-x64|win32-x64|x64)"
 assert_metadata_points_to_existing_file "latest-arm64-mac.yml" "(mac-arm64|darwin-arm64|arm64)"
 
-for f in WePulse-Hermes-1.0.0-win-x64.exe WePulse-Hermes-1.0.0-mac-arm64.dmg WePulse-Hermes-1.0.0-mac-arm64.zip; do
+for f in WePulse-Agent-Hermes-1.0.0-win-x64.exe WePulse-Agent-Hermes-1.0.0-mac-arm64.dmg WePulse-Agent-Hermes-1.0.0-mac-arm64.zip; do
   if [ ! -f "$OUTPUT_DIR/$f" ]; then
     echo "FAIL: missing distributable: $f"
     ERRORS=$((ERRORS + 1))

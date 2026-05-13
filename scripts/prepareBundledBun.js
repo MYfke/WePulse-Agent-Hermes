@@ -51,15 +51,15 @@ function getCacheRootDir() {
 
   if (process.platform === 'win32') {
     const localAppData = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local');
-    return path.join(localAppData, 'WePulse-Hermes', 'cache', 'bundled-bun');
+    return path.join(localAppData, 'WePulse-Agent-Hermes', 'cache', 'bundled-bun');
   }
 
   if (process.platform === 'darwin') {
-    return path.join(os.homedir(), 'Library', 'Caches', 'WePulse-Hermes', 'bundled-bun');
+    return path.join(os.homedir(), 'Library', 'Caches', 'WePulse-Agent-Hermes', 'bundled-bun');
   }
 
   const xdgCacheHome = process.env.XDG_CACHE_HOME || path.join(os.homedir(), '.cache');
-  return path.join(xdgCacheHome, 'WePulse-Hermes', 'bundled-bun');
+  return path.join(xdgCacheHome, 'WePulse-Agent-Hermes', 'bundled-bun');
 }
 
 function getPlatformAsset(platform, arch, variant = 'default') {

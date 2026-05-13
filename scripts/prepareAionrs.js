@@ -73,15 +73,15 @@ function getCacheRootDir() {
 
   if (process.platform === 'win32') {
     const localAppData = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local');
-    return path.join(localAppData, 'WePulse-Hermes', 'cache', 'bundled-aionrs');
+    return path.join(localAppData, 'WePulse-Agent-Hermes', 'cache', 'bundled-aionrs');
   }
 
   if (process.platform === 'darwin') {
-    return path.join(os.homedir(), 'Library', 'Caches', 'WePulse-Hermes', 'bundled-aionrs');
+    return path.join(os.homedir(), 'Library', 'Caches', 'WePulse-Agent-Hermes', 'bundled-aionrs');
   }
 
   const xdgCacheHome = process.env.XDG_CACHE_HOME || path.join(os.homedir(), '.cache');
-  return path.join(xdgCacheHome, 'WePulse-Hermes', 'bundled-aionrs');
+  return path.join(xdgCacheHome, 'WePulse-Agent-Hermes', 'bundled-aionrs');
 }
 
 function getCacheRuntimeDir(tag, runtimeKey) {
@@ -127,7 +127,7 @@ function resolveLocalBinary(projectRoot, platform, arch, runtimeKey, binaryName)
       candidates.push(
         path.join(
           '/Applications',
-          'WePulse-Hermes.app',
+          'WePulse-Agent-Hermes.app',
           'Contents',
           'Resources',
           'bundled-aionrs',

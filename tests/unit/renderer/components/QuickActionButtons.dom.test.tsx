@@ -75,7 +75,7 @@ describe('QuickActionButtons', () => {
     );
 
     fireEvent.click(screen.getByText('conversation.welcome.quickActionStar').closest('div') as HTMLElement);
-    expect(onOpenLink).toHaveBeenCalledWith('https://github.com/MYfke/WePulse-Hermes');
+    expect(onOpenLink).toHaveBeenCalledWith('https://github.com/MYfke/WePulse-Agent-Hermes');
     expect(onOpenBugReport).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByText(/settings\.webui/).closest('div') as HTMLElement);

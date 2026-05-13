@@ -5,10 +5,10 @@
  */
 
 export const APP_DISPLAY_NAME = 'WePulse Hermes';
-export const APP_FILE_NAME = 'WePulse-Hermes';
+export const APP_FILE_NAME = 'WePulse-Agent-Hermes';
 export const APP_DEV_NAME = 'WePulse Hermes Dev';
 export const APP_SECONDARY_DEV_NAME = 'WePulse Hermes Dev 2';
-export const APP_REPOSITORY = 'MYfke/WePulse-Hermes';
+export const APP_REPOSITORY = 'MYfke/WePulse-Agent-Hermes';
 export const APP_GITHUB_URL = `https://github.com/${APP_REPOSITORY}`;
 export const APP_RELEASES_URL = `${APP_GITHUB_URL}/releases`;
 export const APP_ISSUES_URL = `${APP_GITHUB_URL}/issues`;
