@@ -22,6 +22,7 @@ jobs:
     outputs:
       target_env: ${{ steps.resolve.outputs.target_env }}
       website_base_url: ${{ steps.resolve.outputs.website_base_url }}
+      sub2api_base_url: ${{ steps.resolve.outputs.sub2api_base_url }}
       oss_prefix: ${{ steps.resolve.outputs.oss_prefix }}
       publish_url: ${{ steps.resolve.outputs.publish_url }}
       release_version: ${{ steps.resolve.outputs.release_version }}
@@ -53,6 +54,7 @@ jobs:
           if [[ "$GITHUB_REF" == "refs/heads/dev" ]]; then
             target_env="dev"
             website_base_url="https://www-dev.wepulse.cn"
+            sub2api_base_url="https://agent-dev.wepulse.cn"
             oss_prefix="hermes/dev"
             is_dev="true"
             latest_patch="$patch"
@@ -70,6 +72,7 @@ jobs:
           elif [[ "$GITHUB_REF" == refs/tags/* && "$GITHUB_REF" == *-dev-* ]]; then
             target_env="dev"
             website_base_url="https://www-dev.wepulse.cn"
+            sub2api_base_url="https://agent-dev.wepulse.cn"
             oss_prefix="hermes/dev"
             is_dev="true"
             tag_name="${GITHUB_REF#refs/tags/}"
@@ -81,6 +84,7 @@ jobs:
           elif [[ "$GITHUB_REF" == refs/tags/* ]]; then
             target_env="prod"
             website_base_url="https://wepulse.cn"
+            sub2api_base_url="https://agent.wepulse.cn"
             oss_prefix="hermes/prod"
             is_dev="false"
             tag_name="${GITHUB_REF#refs/tags/}"
@@ -97,6 +101,7 @@ jobs:
           publish_url="${website_base_url%/}/${oss_prefix#/}"
           echo "target_env=$target_env" >> "$GITHUB_OUTPUT"
           echo "website_base_url=$website_base_url" >> "$GITHUB_OUTPUT"
+          echo "sub2api_base_url=$sub2api_base_url" >> "$GITHUB_OUTPUT"
           echo "oss_prefix=$oss_prefix" >> "$GITHUB_OUTPUT"
           echo "publish_url=$publish_url" >> "$GITHUB_OUTPUT"
           echo "release_version=$release_version" >> "$GITHUB_OUTPUT"
@@ -116,6 +121,7 @@ jobs:
           {"platform":"windows-x64","os":"windows-2022","command":"node scripts/build-with-builder.js x64 --win --x64","artifact-name":"windows-build-x64","arch":"x64"}
         ]}
       publish_url: ${{ needs.resolve-publish-config.outputs.publish_url }}
+      sub2api_base_url: ${{ needs.resolve-publish-config.outputs.sub2api_base_url }}
       release_version: ${{ needs.resolve-publish-config.outputs.release_version }}
     secrets: inherit
 

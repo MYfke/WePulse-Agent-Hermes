@@ -10,7 +10,30 @@ export const WEPULSE_SUB2API_PLATFORM_ID = 'wepulse-sub2api';
 export const WEPULSE_SUB2API_PROVIDER_ID = 'wepulse-sub2api';
 export const WEPULSE_SUB2API_PROVIDER_NAME = 'WePulse Sub2api';
 export const WEPULSE_HERMES_CLIENT_TITLE = 'WePulse Hermes';
-export const WEPULSE_DEFAULT_SUB2API_BASE_URL = 'https://agent-dev.wepulse.cn';
+export const WEPULSE_DEV_SUB2API_BASE_URL = 'https://agent-dev.wepulse.cn';
+export const WEPULSE_PROD_SUB2API_BASE_URL = 'https://agent.wepulse.cn';
+
+type WePulseDefaultSub2apiEnv = {
+  NODE_ENV?: string;
+  WEPULSE_SUB2API_BASE_URL?: string;
+};
+
+function getWePulseDefaultSub2apiEnv(): WePulseDefaultSub2apiEnv {
+  return {
+    NODE_ENV: process.env.NODE_ENV,
+    WEPULSE_SUB2API_BASE_URL: process.env.WEPULSE_SUB2API_BASE_URL,
+  };
+}
+
+export function resolveWePulseDefaultSub2apiBaseUrl(
+  env: WePulseDefaultSub2apiEnv = getWePulseDefaultSub2apiEnv()
+): string {
+  return (
+    env.WEPULSE_SUB2API_BASE_URL?.trim() ||
+    (env.NODE_ENV === 'production' ? WEPULSE_PROD_SUB2API_BASE_URL : WEPULSE_DEV_SUB2API_BASE_URL)
+  );
+}
+export const WEPULSE_DEFAULT_SUB2API_BASE_URL = resolveWePulseDefaultSub2apiBaseUrl();
 export const WEPULSE_AUTH_LOGIN_PATH = '/api/v1/wepulse/auth/login';
 export const WEPULSE_AUTH_REFRESH_PATH = '/api/v1/wepulse/auth/refresh';
 export const WEPULSE_MODELS_PATH = '/v1/models';

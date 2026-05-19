@@ -7,6 +7,7 @@ import {
   buildWePulseGatewayBaseUrl,
   normalizeWePulseSub2apiRoot,
   removeWePulseSub2apiProvider,
+  resolveWePulseDefaultSub2apiBaseUrl,
   upsertWePulseSub2apiProvider,
 } from '@/common/config/wepulse';
 
@@ -19,6 +20,17 @@ describe('wepulse config helpers', () => {
 
   it('builds OpenAI-compatible gateway base URL', () => {
     expect(buildWePulseGatewayBaseUrl('https://agent-dev.wepulse.cn')).toBe('https://agent-dev.wepulse.cn/v1');
+  });
+
+  it('uses prod Sub2api by default for production builds and dev for development', () => {
+    expect(resolveWePulseDefaultSub2apiBaseUrl({ NODE_ENV: 'production' })).toBe('https://agent.wepulse.cn');
+    expect(resolveWePulseDefaultSub2apiBaseUrl({ NODE_ENV: 'development' })).toBe('https://agent-dev.wepulse.cn');
+    expect(
+      resolveWePulseDefaultSub2apiBaseUrl({
+        NODE_ENV: 'production',
+        WEPULSE_SUB2API_BASE_URL: 'https://custom.example.com',
+      })
+    ).toBe('https://custom.example.com');
   });
 
   it('upserts one stable WePulse provider while preserving other providers', () => {

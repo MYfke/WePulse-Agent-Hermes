@@ -1031,7 +1031,7 @@
     "lastModelSyncError": "モデル同期に失敗しました: {{error}}",
     "sub2apiBaseUrl": "Sub2api サービス URL",
     "sub2apiBaseUrlRequired": "Sub2api サービス URL を入力してください",
-    "sub2apiBaseUrlHint": "dev ブランチは dev-ecs を既定で使用します: https://agent-dev.wepulse.cn",
+    "sub2apiBaseUrlHint": "未設定時は現在のビルド環境に従います: prod https://agent.wepulse.cn、dev https://agent-dev.wepulse.cn",
     "loadFailed": "WePulse ステータスの読み込みに失敗しました",
     "saveFailed": "WePulse 設定の保存に失敗しました",
     "saveSuccess": "WePulse 設定を保存しました",

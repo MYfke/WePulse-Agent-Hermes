@@ -909,7 +909,7 @@
     "lastModelSyncError": "Ошибка синхронизации моделей: {{error}}",
     "sub2apiBaseUrl": "URL сервиса Sub2api",
     "sub2apiBaseUrlRequired": "Введите URL сервиса Sub2api",
-    "sub2apiBaseUrlHint": "Ветка dev по умолчанию использует dev-ecs: https://agent-dev.wepulse.cn",
+    "sub2apiBaseUrlHint": "Если не задано, выбирается по текущей среде сборки: prod https://agent.wepulse.cn, dev https://agent-dev.wepulse.cn",
     "loadFailed": "Не удалось загрузить статус WePulse",
     "saveFailed": "Не удалось сохранить конфигурацию WePulse",
     "saveSuccess": "Конфигурация WePulse сохранена",

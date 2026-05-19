@@ -6,7 +6,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ipcBridge } from '@/common';
-import type { WePulseStatus } from '@/common/config/wepulse';
+import { WEPULSE_DEFAULT_SUB2API_BASE_URL, type WePulseStatus } from '@/common/config/wepulse';
 import type { HermesAgentRuntimeConfig, HermesAgentUpdateStatus } from '@/common/update/updateTypes';
 import { Alert, Button, Card, Form, Input, Message, Space, Switch, Tag, Typography } from '@arco-design/web-react';
 import type { TFunction } from 'i18next';
@@ -480,7 +480,7 @@ const WePulseSettings: React.FC = () => {
               rules={[{ required: true, message: t('settings.wepulse.sub2apiBaseUrlRequired') }]}
               extra={t('settings.wepulse.sub2apiBaseUrlHint')}
             >
-              <Input placeholder='https://agent-dev.wepulse.cn' />
+              <Input placeholder={WEPULSE_DEFAULT_SUB2API_BASE_URL} />
             </Form.Item>
           </Form>
 

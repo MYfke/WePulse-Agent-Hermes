@@ -27,6 +27,10 @@ on:
         description: 'Generic electron-updater feed URL embedded into packaged builds'
         type: string
         default: ''
+      sub2api_base_url:
+        description: 'WePulse Sub2api URL embedded into packaged builds'
+        type: string
+        default: ''
       release_version:
         description: 'Semver version injected into package.json before packaging'
         type: string
@@ -85,6 +89,7 @@ jobs:
     if: ${{ always() && (inputs.skip_code_quality || needs.code-quality.result == 'success') }}
     env:
       WEPULSE_HERMES_PUBLISH_URL: ${{ inputs.publish_url }}
+      WEPULSE_SUB2API_BASE_URL: ${{ inputs.sub2api_base_url }}
       GH_TOKEN: ${{ github.token }}
       GITHUB_TOKEN: ${{ github.token }}
 

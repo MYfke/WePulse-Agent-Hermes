@@ -1029,7 +1029,7 @@
     "lastModelSyncError": "Model eşitleme başarısız: {{error}}",
     "sub2apiBaseUrl": "Sub2api servis URL'si",
     "sub2apiBaseUrlRequired": "Lütfen Sub2api servis URL'sini girin",
-    "sub2apiBaseUrlHint": "dev dalı varsayılan olarak dev-ecs kullanır: https://agent-dev.wepulse.cn",
+    "sub2apiBaseUrlHint": "Yapılandırılmadığında mevcut derleme ortamı kullanılır: prod https://agent.wepulse.cn, dev https://agent-dev.wepulse.cn",
     "loadFailed": "WePulse durumu yüklenemedi",
     "saveFailed": "WePulse yapılandırması kaydedilemedi",
     "saveSuccess": "WePulse yapılandırması kaydedildi",

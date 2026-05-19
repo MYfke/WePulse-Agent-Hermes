@@ -1031,7 +1031,7 @@
     "lastModelSyncError": "모델 동기화 실패: {{error}}",
     "sub2apiBaseUrl": "Sub2api 서비스 URL",
     "sub2apiBaseUrlRequired": "Sub2api 서비스 URL을 입력하세요",
-    "sub2apiBaseUrlHint": "dev 브랜치는 기본적으로 dev-ecs를 사용합니다: https://agent-dev.wepulse.cn",
+    "sub2apiBaseUrlHint": "설정하지 않으면 현재 빌드 환경을 따릅니다: prod https://agent.wepulse.cn, dev https://agent-dev.wepulse.cn",
     "loadFailed": "WePulse 상태를 불러오지 못했습니다",
     "saveFailed": "WePulse 설정 저장 실패",
     "saveSuccess": "WePulse 설정이 저장되었습니다",

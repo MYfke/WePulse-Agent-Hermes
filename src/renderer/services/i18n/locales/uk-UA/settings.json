@@ -947,7 +947,7 @@
     "lastModelSyncError": "Помилка синхронізації моделей: {{error}}",
     "sub2apiBaseUrl": "URL сервісу Sub2api",
     "sub2apiBaseUrlRequired": "Введіть URL сервісу Sub2api",
-    "sub2apiBaseUrlHint": "Гілка dev за замовчуванням використовує dev-ecs: https://agent-dev.wepulse.cn",
+    "sub2apiBaseUrlHint": "Якщо не задано, вибирається за поточним середовищем збірки: prod https://agent.wepulse.cn, dev https://agent-dev.wepulse.cn",
     "loadFailed": "Не вдалося завантажити статус WePulse",
     "saveFailed": "Не вдалося зберегти конфігурацію WePulse",
     "saveSuccess": "Конфігурацію WePulse збережено",

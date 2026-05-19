@@ -1029,7 +1029,7 @@
     "lastModelSyncError": "Model sync failed: {{error}}",
     "sub2apiBaseUrl": "Sub2api service URL",
     "sub2apiBaseUrlRequired": "Please enter the Sub2api service URL",
-    "sub2apiBaseUrlHint": "Dev branch defaults to dev-ecs: https://agent-dev.wepulse.cn",
+    "sub2apiBaseUrlHint": "Defaults follow the current build: prod https://agent.wepulse.cn, dev https://agent-dev.wepulse.cn",
     "loadFailed": "Failed to load WePulse status",
     "saveFailed": "Failed to save WePulse configuration",
     "saveSuccess": "WePulse configuration saved",

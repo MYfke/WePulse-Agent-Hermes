@@ -1030,7 +1030,7 @@
     "lastModelSyncError": "模型同步失败：{{error}}",
     "sub2apiBaseUrl": "Sub2api 服务地址",
     "sub2apiBaseUrlRequired": "请输入 Sub2api 服务地址",
-    "sub2apiBaseUrlHint": "dev 分支默认使用 dev-ecs：https://agent-dev.wepulse.cn",
+    "sub2apiBaseUrlHint": "未配置时按当前构建环境选择：生产 https://agent.wepulse.cn，开发 https://agent-dev.wepulse.cn",
     "loadFailed": "加载 WePulse 状态失败",
     "saveFailed": "保存 WePulse 配置失败",
     "saveSuccess": "WePulse 配置已保存",
