@@ -366,12 +366,12 @@ jobs:
       - name: Resolve OSS credentials
         shell: bash
         env:
-          DEV_OSS_ENDPOINT: ${{ secrets.OSS_ENDPOINT_DEV }}
-          DEV_OSS_BUCKET: ${{ secrets.OSS_BUCKET_DEV }}
+          DEV_OSS_ENDPOINT: oss-ap-southeast-1.aliyuncs.com
+          DEV_OSS_BUCKET: wepulse-website-dev
           DEV_OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID_DEV }}
           DEV_OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET_DEV }}
-          PROD_OSS_ENDPOINT: ${{ secrets.OSS_ENDPOINT }}
-          PROD_OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
+          PROD_OSS_ENDPOINT: oss-cn-shenzhen.aliyuncs.com
+          PROD_OSS_BUCKET: wepulse-website
           PROD_OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
           PROD_OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
         run: |
