@@ -77,7 +77,7 @@ jobs:
 
       - name: Download release assets from GitHub
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p dist
           gh release download "${{ steps.version.outputs.tag }}" \
